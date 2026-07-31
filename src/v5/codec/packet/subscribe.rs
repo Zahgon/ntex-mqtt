@@ -8,15 +8,14 @@ use crate::types::QoS;
 use crate::utils::{self, Decode, Encode, write_variable_length};
 use crate::v5::codec::{UserProperties, UserProperty, encode, property_type as pt};
 
-/// Represents SUBSCRIBE packet
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Subscribe {
-    /// Packet Identifier
+    
     pub packet_id: NonZeroU16,
-    /// Subscription Identifier
+    
     pub id: Option<NonZeroU32>,
     pub user_properties: UserProperties,
-    /// the list of Topic Filters and `QoS` to which the Client wants to subscribe.
+    
     pub topic_filters: Vec<(ByteString, SubscriptionOptions)>,
 }
 
@@ -29,14 +28,7 @@ pub struct SubscriptionOptions {
 }
 
 impl Default for SubscriptionOptions {
-    fn default() -> Self {
-        Self {
-            qos: QoS::AtMostOnce,
-            no_local: false,
-            retain_as_published: false,
-            retain_handling: RetainHandling::AtSubscribe,
-        }
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 prim_enum! {
@@ -47,30 +39,27 @@ prim_enum! {
     }
 }
 
-/// Represents SUBACK packet
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SubscribeAck {
     pub packet_id: NonZeroU16,
     pub properties: UserProperties,
     pub reason_string: Option<ByteString>,
-    /// corresponds to a Topic Filter in the SUBSCRIBE Packet being acknowledged.
+    
     pub status: Vec<SubscribeAckReason>,
 }
 
-/// Represents UNSUBSCRIBE packet
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Unsubscribe {
-    /// Packet Identifier
+    
     pub packet_id: NonZeroU16,
     pub user_properties: UserProperties,
-    /// the list of Topic Filters that the Client wishes to unsubscribe from.
+    
     pub topic_filters: Vec<ByteString>,
 }
 
-/// Represents UNSUBACK packet
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct UnsubscribeAck {
-    /// Packet Identifier
+    
     pub packet_id: NonZeroU16,
     pub properties: UserProperties,
     pub reason_string: Option<ByteString>,
@@ -78,7 +67,7 @@ pub struct UnsubscribeAck {
 }
 
 prim_enum! {
-    /// SUBACK reason codes
+    
     pub enum SubscribeAckReason {
         GrantedQos0 = 0,
         GrantedQos1 = 1,
@@ -96,7 +85,7 @@ prim_enum! {
 }
 
 prim_enum! {
-    /// UNSUBACK reason codes
+    
     pub enum UnsubscribeAckReason {
         Success = 0,
         NoSubscriptionExisted = 17,
@@ -109,223 +98,54 @@ prim_enum! {
 }
 
 impl Subscribe {
-    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let packet_id = NonZeroU16::decode(src)?;
-        let prop_src = &mut utils::take_properties(src)?;
-        let mut sub_id = None;
-        let mut user_properties = Vec::new();
-        while prop_src.has_remaining() {
-            let prop_id = prop_src.get_u8();
-            match prop_id {
-                pt::SUB_ID => {
-                    ensure!(sub_id.is_none(), DecodeError::MalformedPacket); // can't appear twice
-                    let val = utils::decode_variable_length_cursor(prop_src)?;
-                    sub_id = Some(NonZeroU32::new(val).ok_or(DecodeError::MalformedPacket)?);
-                }
-                pt::USER => user_properties.push(UserProperty::decode(prop_src)?),
-                _ => return Err(DecodeError::MalformedPacket),
-            }
-        }
-
-        let mut topic_filters = Vec::new();
-        while src.has_remaining() {
-            let topic = ByteString::decode(src)?;
-            let opts = SubscriptionOptions::decode(src)?;
-            topic_filters.push((topic, opts));
-        }
-
-        Ok(Self { packet_id, id: sub_id, user_properties, topic_filters })
-    }
+    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl SubscribeAck {
-    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let packet_id = NonZeroU16::decode(src)?;
-        let (properties, reason_string) = ack_props::decode(src)?;
-        let mut status = Vec::with_capacity(src.remaining());
-        for code in src.as_ref().iter().copied() {
-            status.push(code.try_into()?);
-        }
-        Ok(Self { packet_id, properties, reason_string, status })
-    }
+    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Unsubscribe {
-    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let packet_id = NonZeroU16::decode(src)?;
-
-        let prop_src = &mut utils::take_properties(src)?;
-        let mut user_properties = Vec::new();
-        while prop_src.has_remaining() {
-            let prop_id = prop_src.get_u8();
-            match prop_id {
-                pt::USER => user_properties.push(UserProperty::decode(prop_src)?),
-                _ => return Err(DecodeError::MalformedPacket),
-            }
-        }
-
-        let mut topic_filters = Vec::new();
-        while src.remaining() > 0 {
-            topic_filters.push(ByteString::decode(src)?);
-        }
-
-        Ok(Self { packet_id, user_properties, topic_filters })
-    }
+    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl UnsubscribeAck {
-    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let packet_id = NonZeroU16::decode(src)?;
-        let (properties, reason_string) = ack_props::decode(src)?;
-        let mut status = Vec::with_capacity(src.remaining());
-        for code in src.as_ref().iter().copied() {
-            status.push(code.try_into()?);
-        }
-        Ok(Self { packet_id, properties, reason_string, status })
-    }
+    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl encode::EncodeLtd for Subscribe {
-    fn encoded_size(&self, _limit: u32) -> usize {
-        let prop_len = self.id.map_or(0, |v| 1 + encode::var_int_len(v.get() as usize) as usize) // +1 to account for property type byte
-            + self.user_properties.encoded_size();
-        let payload_len = self
-            .topic_filters
-            .iter()
-            .fold(0, |acc, (filter, _opts)| acc + filter.encoded_size() + 1);
-        self.packet_id.encoded_size()
-            + encode::var_int_len(prop_len) as usize
-            + prop_len
-            + payload_len
-    }
+    fn encoded_size(&self, _limit: u32) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages, _: u32) -> Result<(), EncodeError> {
-        self.packet_id.encode(buf)?;
-
-        // encode properties
-        let prop_len = self.id.map_or(0, |v| 1 + encode::var_int_len(v.get() as usize))
-            + self.user_properties.encoded_size() as u32; // safe: size was already checked against maximum
-        utils::write_variable_length(prop_len, buf);
-
-        if let Some(id) = self.id {
-            buf.put_u8(pt::SUB_ID);
-            write_variable_length(id.get(), buf);
-        }
-
-        self.user_properties.encode(buf)?;
-
-        // payload
-        for (filter, opts) in &self.topic_filters {
-            filter.encode(buf)?;
-            opts.encode(buf)?;
-        }
-
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages, _: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for SubscriptionOptions {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        ensure!(src.has_remaining(), DecodeError::InvalidLength);
-        let val = src.get_u8();
-        let qos = (val & 0b0000_0011).try_into()?;
-        let retain_handling = ((val & 0b0011_0000) >> 4).try_into()?;
-        Ok(SubscriptionOptions {
-            qos,
-            no_local: val & 0b0000_0100 != 0,
-            retain_as_published: val & 0b0000_1000 != 0,
-            retain_handling,
-        })
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for SubscriptionOptions {
-    fn encoded_size(&self) -> usize {
-        1
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        buf.put_u8(
-            u8::from(self.qos)
-                | (u8::from(self.no_local) << 2)
-                | (u8::from(self.retain_as_published) << 3)
-                | (u8::from(self.retain_handling) << 4),
-        );
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl encode::EncodeLtd for SubscribeAck {
-    fn encoded_size(&self, limit: u32) -> usize {
-        let len = self.status.len();
-        if len > (u32::MAX - 2) as usize {
-            return usize::MAX; // bail to avoid overflow
-        }
+    fn encoded_size(&self, limit: u32) -> usize { panic!("STUB: not implemented") }
 
-        2 + ack_props::encoded_size(
-            &self.properties,
-            &self.reason_string,
-            limit - 2 - len as u32,
-        ) + len
-    }
-
-    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> {
-        self.packet_id.encode(buf)?;
-        let len = self.status.len() as u32; // safe: max size checked already
-        ack_props::encode(&self.properties, &self.reason_string, buf, size - 2 - len)?;
-        for &reason in &self.status {
-            buf.put_u8(reason.into());
-        }
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl encode::EncodeLtd for Unsubscribe {
-    fn encoded_size(&self, _limit: u32) -> usize {
-        let prop_len = self.user_properties.encoded_size();
-        2 + encode::var_int_len(prop_len) as usize
-            + prop_len
-            + self.topic_filters.iter().fold(0, |acc, filter| acc + 2 + filter.len())
-    }
+    fn encoded_size(&self, _limit: u32) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages, _size: u32) -> Result<(), EncodeError> {
-        self.packet_id.encode(buf)?;
-
-        // properties
-        let prop_len = self.user_properties.encoded_size();
-        utils::write_variable_length(prop_len as u32, buf); // safe: max size check is done already
-        self.user_properties.encode(buf)?;
-
-        // payload
-        for filter in &self.topic_filters {
-            filter.encode(buf)?;
-        }
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages, _size: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl encode::EncodeLtd for UnsubscribeAck {
-    // todo: almost identical to SUBACK
-    fn encoded_size(&self, limit: u32) -> usize {
-        let len = self.status.len();
-        2 + len
-            + ack_props::encoded_size(
-                &self.properties,
-                &self.reason_string,
-                encode::reduce_limit(limit, 2 + len),
-            )
-    }
+    
+    fn encoded_size(&self, limit: u32) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> {
-        self.packet_id.encode(buf)?;
-        let len = self.status.len() as u32;
-
-        ack_props::encode(&self.properties, &self.reason_string, buf, size - 2 - len)?;
-        for &reason in &self.status {
-            buf.put_u8(reason.into());
-        }
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]
@@ -333,7 +153,7 @@ mod tests {
     use ntex_codec::{Decoder, Encoder};
 
     use super::super::super::{Codec, Decoded, EncodeLtd, Packet};
-    // use crate::v5::codec::encode::EncodeLtd;
+    
     use super::*;
 
     fn packet(res: Decoded) -> Packet {

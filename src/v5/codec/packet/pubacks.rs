@@ -7,22 +7,20 @@ use crate::error::{DecodeError, EncodeError};
 use crate::utils::{Decode, Encode};
 use crate::v5::codec::{UserProperties, encode};
 
-const HEADER_LEN: u32 = 2 + 1; // packet id + reason code
+const HEADER_LEN: u32 = 2 + 1; 
 
-/// PUBACK/PUBREC message content
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PublishAck {
-    /// Packet Identifier
+    
     pub packet_id: NonZeroU16,
     pub reason_code: PublishAckReason,
     pub properties: UserProperties,
     pub reason_string: Option<ByteString>,
 }
 
-/// PUBREL/PUBCOMP message content
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PublishAck2 {
-    /// Packet Identifier
+    
     pub packet_id: NonZeroU16,
     pub reason_code: PublishAck2Reason,
     pub properties: UserProperties,
@@ -30,7 +28,7 @@ pub struct PublishAck2 {
 }
 
 prim_enum! {
-    /// PUBACK / PUBREC reason codes
+    
     pub enum PublishAckReason {
         Success = 0,
         NoMatchingSubscribers = 16,
@@ -45,7 +43,7 @@ prim_enum! {
 }
 
 prim_enum! {
-    /// PUBREL / PUBCOMP reason codes
+    
     pub enum PublishAck2Reason {
         Success = 0,
         PacketIdNotFound = 146
@@ -53,103 +51,31 @@ prim_enum! {
 }
 
 impl PublishAck {
-    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let packet_id = NonZeroU16::decode(src)?;
-
-        let ack = if src.has_remaining() {
-            let reason_code = src.get_u8().try_into()?;
-            if src.has_remaining() {
-                let (properties, reason_string) = ack_props::decode(src)?;
-                ensure!(!src.has_remaining(), DecodeError::InvalidLength); // no data should be left in src
-                Self { packet_id, reason_code, properties, reason_string }
-            } else {
-                Self { packet_id, reason_code, ..Default::default() }
-            }
-        } else {
-            Self { packet_id, ..Default::default() }
-        };
-
-        Ok(ack)
-    }
+    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Default for PublishAck {
-    fn default() -> Self {
-        Self {
-            packet_id: NonZeroU16::new(1).unwrap(),
-            reason_code: PublishAckReason::Success,
-            properties: UserProperties::default(),
-            reason_string: None,
-        }
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 impl PublishAck2 {
-    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let packet_id = NonZeroU16::decode(src)?;
-        let ack = if src.has_remaining() {
-            let reason_code = src.get_u8().try_into()?;
-            if src.has_remaining() {
-                let (properties, reason_string) = ack_props::decode(src)?;
-                ensure!(!src.has_remaining(), DecodeError::InvalidLength); // no data should be left in src
-                Self { packet_id, reason_code, properties, reason_string }
-            } else {
-                Self { packet_id, reason_code, ..Default::default() }
-            }
-        } else {
-            Self { packet_id, ..Default::default() }
-        };
-
-        Ok(ack)
-    }
+    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Default for PublishAck2 {
-    fn default() -> Self {
-        Self {
-            packet_id: NonZeroU16::new(1).unwrap(),
-            reason_code: PublishAck2Reason::Success,
-            properties: UserProperties::default(),
-            reason_string: None,
-        }
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 impl encode::EncodeLtd for PublishAck {
-    fn encoded_size(&self, limit: u32) -> usize {
-        let prop_len = ack_props::encoded_size(
-            &self.properties,
-            &self.reason_string,
-            limit - HEADER_LEN - 4,
-        ); // limit - HEADER_LEN - len(packet_len.max())
-        HEADER_LEN as usize + prop_len
-    }
+    fn encoded_size(&self, limit: u32) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> {
-        self.packet_id.get().encode(buf)?;
-        buf.put_u8(self.reason_code.into());
-        ack_props::encode(&self.properties, &self.reason_string, buf, size - HEADER_LEN)?;
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl encode::EncodeLtd for PublishAck2 {
-    fn encoded_size(&self, limit: u32) -> usize {
-        const HEADER_LEN: u32 = 2 + 1; // fixed header + packet id + reason code
-        let prop_len = ack_props::encoded_size(
-            &self.properties,
-            &self.reason_string,
-            limit - HEADER_LEN - 4,
-        ); // limit - HEADER_LEN - prop_len.max()
-        HEADER_LEN as usize + prop_len
-    }
+    fn encoded_size(&self, limit: u32) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> {
-        self.packet_id.get().encode(buf)?;
-        buf.put_u8(self.reason_code.into());
-        ack_props::encode(&self.properties, &self.reason_string, buf, size - 3)?;
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]

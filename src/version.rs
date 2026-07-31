@@ -18,51 +18,14 @@ impl Decoder for VersionCodec {
     type Item = ProtocolVersion;
     type Error = DecodeError;
 
-    fn decode(&self, src: &mut BytesMut) -> Result<Option<Self::Item>, DecodeError> {
-        let len = src.len();
-        if len < 2 {
-            return Ok(None);
-        }
-
-        let src_slice = src.as_ref();
-        let first_byte = src_slice[0];
-        match utils::decode_variable_length(&src_slice[1..])? {
-            Some((_, mut consumed)) => {
-                consumed += 1;
-
-                if first_byte == packet_type::CONNECT {
-                    if len <= consumed + 6 {
-                        return Ok(None);
-                    }
-
-                    let len =
-                        u16::from_be_bytes(src[consumed..consumed + 2].try_into().unwrap());
-                    ensure!(
-                        len == 4 && &src[consumed + 2..consumed + 6] == MQTT,
-                        DecodeError::InvalidProtocol
-                    );
-
-                    match src[consumed + 6] {
-                        MQTT_LEVEL_3 => Ok(Some(ProtocolVersion::MQTT3)),
-                        MQTT_LEVEL_5 => Ok(Some(ProtocolVersion::MQTT5)),
-                        _ => Err(DecodeError::InvalidProtocol),
-                    }
-                } else {
-                    Err(DecodeError::UnsupportedPacketType)
-                }
-            }
-            None => Ok(None),
-        }
-    }
+    fn decode(&self, src: &mut BytesMut) -> Result<Option<Self::Item>, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encoder for VersionCodec {
     type Item = ProtocolVersion;
     type Error = EncodeError;
 
-    fn encode(&self, _: Self::Item, _: &mut BytesMut) -> Result<(), EncodeError> {
-        Err(EncodeError::UnsupportedVersion)
-    }
+    fn encode(&self, _: Self::Item, _: &mut BytesMut) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]

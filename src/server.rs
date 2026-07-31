@@ -13,7 +13,6 @@ use crate::{MqttServiceConfig, control::Control, service};
 type Request<U> = <U as Decoder>::Item;
 type Response<U> = Option<<U as Encoder>::Item>;
 
-/// Mqtt Server
 pub struct MqttServer<V3, V5, Err, InitErr> {
     svc_v3: V3,
     svc_v5: V5,
@@ -21,9 +20,7 @@ pub struct MqttServer<V3, V5, Err, InitErr> {
 }
 
 impl<V3, V5, Err, InitErr> fmt::Debug for MqttServer<V3, V5, Err, InitErr> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MqttServer").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<Err, InitErr>
@@ -34,14 +31,8 @@ impl<Err, InitErr>
         InitErr,
     >
 {
-    /// Create mqtt server
-    pub fn new() -> Self {
-        MqttServer {
-            svc_v3: DefaultProtocolServer::new(ProtocolVersion::MQTT3),
-            svc_v5: DefaultProtocolServer::new(ProtocolVersion::MQTT5),
-            _t: marker::PhantomData,
-        }
-    }
+    
+    pub fn new() -> Self { panic!("STUB: not implemented") }
 }
 
 impl<Err, InitErr> Default
@@ -52,9 +43,7 @@ impl<Err, InitErr> Default
         InitErr,
     >
 {
-    fn default() -> Self {
-        MqttServer::new()
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 impl<V3, V5, Err, InitErr> MqttServer<V3, V5, Err, InitErr>
@@ -74,7 +63,7 @@ where
             InitError = InitErr,
         >,
 {
-    /// Service to handle v3 protocol
+    
     pub fn v3<St, E, H, T, M, C, Codec>(
         self,
         service: service::MqttServer<St, E, H, T, M, C, Codec>,
@@ -122,7 +111,6 @@ where
         MqttServer { svc_v3: service, svc_v5: self.svc_v5, _t: marker::PhantomData }
     }
 
-    /// Service to handle v5 protocol
     pub fn v5<St, E, H, T, M, C, Codec>(
         self,
         service: service::MqttServer<St, E, H, T, M, C, Codec>,
@@ -191,13 +179,7 @@ where
     async fn create_service(
         &self,
         cfg: SharedCfg,
-    ) -> Result<MqttServerImpl<V3::Service, V5::Service, Err>, InitErr> {
-        let (v3, v5) =
-            join(self.svc_v3.create(cfg.clone()), self.svc_v5.create(cfg.clone())).await;
-        let v3 = v3?;
-        let v5 = v5?;
-        Ok(MqttServerImpl { handlers: (v3, v5), cfg: cfg.get(), _t: marker::PhantomData })
-    }
+    ) -> Result<MqttServerImpl<V3::Service, V5::Service, Err>, InitErr> { panic!("STUB: not implemented") }
 }
 
 impl<V3, V5, Err, InitErr> ServiceFactory<IoBoxed, SharedCfg>
@@ -225,9 +207,7 @@ where
     type Service = MqttServerImpl<V3::Service, V5::Service, Err>;
     type InitError = InitErr;
 
-    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> {
-        self.create_service(cfg).await
-    }
+    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
 impl<F, V3, V5, Err, InitErr> ServiceFactory<Io<F>, SharedCfg>
@@ -256,12 +236,9 @@ where
     type Service = MqttServerImpl<V3::Service, V5::Service, Err>;
     type InitError = InitErr;
 
-    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> {
-        self.create_service(cfg).await
-    }
+    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
-/// Mqtt Server
 pub struct MqttServerImpl<V3, V5, Err> {
     handlers: (V3, V5),
     cfg: Cfg<MqttServiceConfig>,
@@ -269,9 +246,7 @@ pub struct MqttServerImpl<V3, V5, Err> {
 }
 
 impl<V3, V5, Err> fmt::Debug for MqttServerImpl<V3, V5, Err> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MqttServerImpl").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<V3, V5, Err> Service<IoBoxed> for MqttServerImpl<V3, V5, Err>
@@ -283,66 +258,20 @@ where
     type Error = MqttError<Err>;
 
     #[inline]
-    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> {
-        let (ready1, ready2) =
-            join(ctx.ready(&self.handlers.0), ctx.ready(&self.handlers.1)).await;
-        ready1?;
-        ready2
-    }
+    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
     #[inline]
-    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> {
-        self.handlers.0.poll(cx)?;
-        self.handlers.1.poll(cx)
-    }
+    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
     #[inline]
-    async fn shutdown(&self) {
-        self.handlers.0.shutdown().await;
-        self.handlers.1.shutdown().await;
-    }
+    async fn shutdown(&self) { panic!("STUB: not implemented") }
 
     #[inline]
     async fn call(
         &self,
         io: IoBoxed,
         ctx: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        // try to read Version, buffer may already contain info
-        let res = io
-            .decode(&VersionCodec)
-            .map_err(|e| MqttError::Handshake(HandshakeError::Protocol(e.into())))?;
-        if let Some(ver) = res {
-            match ver {
-                ProtocolVersion::MQTT3 => ctx.call(&self.handlers.0, io).await,
-                ProtocolVersion::MQTT5 => ctx.call(&self.handlers.1, io).await,
-            }
-        } else {
-            let fut = async {
-                match io.recv(&VersionCodec).await {
-                    Ok(ver) => Ok(ver),
-                    Err(Either::Left(e)) => {
-                        Err(MqttError::Handshake(HandshakeError::Protocol(e.into())))
-                    }
-                    Err(Either::Right(e)) => {
-                        Err(MqttError::Handshake(HandshakeError::Disconnected(Some(e))))
-                    }
-                }
-            };
-
-            match select(&mut Deadline::new(self.cfg.protocol_version_timeout), fut).await {
-                Either::Left(()) => Err(MqttError::Handshake(HandshakeError::Timeout)),
-                Either::Right(Ok(Some(ver))) => match ver {
-                    ProtocolVersion::MQTT3 => ctx.call(&self.handlers.0, io).await,
-                    ProtocolVersion::MQTT5 => ctx.call(&self.handlers.1, io).await,
-                },
-                Either::Right(Ok(None)) => {
-                    Err(MqttError::Handshake(HandshakeError::Disconnected(None)))
-                }
-                Either::Right(Err(e)) => Err(e),
-            }
-        }
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 }
 
 impl<F, V3, V5, Err> Service<Io<F>> for MqttServerImpl<V3, V5, Err>
@@ -355,28 +284,20 @@ where
     type Error = MqttError<Err>;
 
     #[inline]
-    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> {
-        Service::<IoBoxed>::ready(self, ctx).await
-    }
+    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
     #[inline]
-    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> {
-        Service::<IoBoxed>::poll(self, cx)
-    }
+    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
     #[inline]
-    async fn shutdown(&self) {
-        Service::<IoBoxed>::shutdown(self).await;
-    }
+    async fn shutdown(&self) { panic!("STUB: not implemented") }
 
     #[inline]
     async fn call(
         &self,
         io: Io<F>,
         ctx: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        Service::<IoBoxed>::call(self, IoBoxed::from(io), ctx).await
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 }
 
 pub struct DefaultProtocolServer<Err, InitErr> {
@@ -385,15 +306,11 @@ pub struct DefaultProtocolServer<Err, InitErr> {
 }
 
 impl<Err, InitErr> fmt::Debug for DefaultProtocolServer<Err, InitErr> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DefaultProtocolServer").field("ver", &self.ver).finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<Err, InitErr> DefaultProtocolServer<Err, InitErr> {
-    fn new(ver: ProtocolVersion) -> Self {
-        Self { ver, _t: marker::PhantomData }
-    }
+    fn new(ver: ProtocolVersion) -> Self { panic!("STUB: not implemented") }
 }
 
 impl<Err, InitErr> ServiceFactory<IoBoxed, SharedCfg> for DefaultProtocolServer<Err, InitErr> {
@@ -402,9 +319,7 @@ impl<Err, InitErr> ServiceFactory<IoBoxed, SharedCfg> for DefaultProtocolServer<
     type Service = DefaultProtocolServer<Err, InitErr>;
     type InitError = InitErr;
 
-    async fn create(&self, _: SharedCfg) -> Result<Self::Service, Self::InitError> {
-        Ok(DefaultProtocolServer { ver: self.ver, _t: marker::PhantomData })
-    }
+    async fn create(&self, _: SharedCfg) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
 impl<Err, InitErr> Service<IoBoxed> for DefaultProtocolServer<Err, InitErr> {
@@ -415,11 +330,7 @@ impl<Err, InitErr> Service<IoBoxed> for DefaultProtocolServer<Err, InitErr> {
         &self,
         _: IoBoxed,
         _: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        Err(MqttError::Handshake(HandshakeError::Disconnected(Some(io::Error::other(
-            format!("Protocol is not supported: {:?}", self.ver),
-        )))))
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]
@@ -428,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_debug() {
-        // Use the default constructor which fills in all type params automatically
+        
         let server = <MqttServer<_, _, (), ()>>::default();
         assert!(format!("{server:?}").contains("MqttServer"));
     }

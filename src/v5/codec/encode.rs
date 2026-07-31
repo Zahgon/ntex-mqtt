@@ -14,250 +14,53 @@ pub(crate) trait EncodeLtd {
 }
 
 impl EncodeLtd for Packet {
-    fn encoded_size(&self, limit: u32) -> usize {
-        // limit -= 5; // fixed header = 1, var_len(remaining.max_value()) = 4
-        match self {
-            Packet::Connect(connect) => connect.encoded_size(limit),
-            Packet::ConnectAck(ack) => ack.encoded_size(limit),
-            Packet::PublishAck(ack) | Packet::PublishReceived(ack) => ack.encoded_size(limit),
-            Packet::PublishRelease(ack) | Packet::PublishComplete(ack) => {
-                ack.encoded_size(limit)
-            }
-            Packet::Subscribe(sub) => sub.encoded_size(limit),
-            Packet::SubscribeAck(ack) => ack.encoded_size(limit),
-            Packet::Unsubscribe(unsub) => unsub.encoded_size(limit),
-            Packet::UnsubscribeAck(ack) => ack.encoded_size(limit),
-            Packet::PingRequest | Packet::PingResponse => 0,
-            Packet::Disconnect(disconnect) => disconnect.encoded_size(limit),
-            Packet::Auth(auth) => auth.encoded_size(limit),
-        }
-    }
+    fn encoded_size(&self, limit: u32) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages, check_size: u32) -> Result<(), EncodeError> {
-        match self {
-            Packet::Connect(connect) => {
-                buf.put_u8(packet_type::CONNECT);
-                write_variable_length(check_size, buf);
-                connect.encode(buf, check_size)
-            }
-            Packet::ConnectAck(ack) => {
-                buf.put_u8(packet_type::CONNACK);
-                write_variable_length(check_size, buf);
-                ack.encode(buf, check_size)
-            }
-            Packet::PublishAck(ack) => {
-                buf.put_u8(packet_type::PUBACK);
-                write_variable_length(check_size, buf);
-                ack.encode(buf, check_size)
-            }
-            Packet::PublishReceived(ack) => {
-                buf.put_u8(packet_type::PUBREC);
-                write_variable_length(check_size, buf);
-                ack.encode(buf, check_size)
-            }
-            Packet::PublishRelease(ack) => {
-                buf.put_u8(packet_type::PUBREL);
-                write_variable_length(check_size, buf);
-                ack.encode(buf, check_size)
-            }
-            Packet::PublishComplete(ack) => {
-                buf.put_u8(packet_type::PUBCOMP);
-                write_variable_length(check_size, buf);
-                ack.encode(buf, check_size)
-            }
-            Packet::Subscribe(sub) => {
-                buf.put_u8(packet_type::SUBSCRIBE);
-                write_variable_length(check_size, buf);
-                sub.encode(buf, check_size)
-            }
-            Packet::SubscribeAck(ack) => {
-                buf.put_u8(packet_type::SUBACK);
-                write_variable_length(check_size, buf);
-                ack.encode(buf, check_size)
-            }
-            Packet::Unsubscribe(unsub) => {
-                buf.put_u8(packet_type::UNSUBSCRIBE);
-                write_variable_length(check_size, buf);
-                unsub.encode(buf, check_size)
-            }
-            Packet::UnsubscribeAck(ack) => {
-                buf.put_u8(packet_type::UNSUBACK);
-                write_variable_length(check_size, buf);
-                ack.encode(buf, check_size)
-            }
-            Packet::PingRequest => {
-                buf.put_slice(&[packet_type::PINGREQ, 0]);
-                Ok(())
-            }
-            Packet::PingResponse => {
-                buf.put_slice(&[packet_type::PINGRESP, 0]);
-                Ok(())
-            }
-            Packet::Disconnect(disconnect) => {
-                buf.put_u8(packet_type::DISCONNECT);
-                write_variable_length(check_size, buf);
-                disconnect.encode(buf, check_size)
-            }
-            Packet::Auth(auth) => {
-                buf.put_u8(packet_type::AUTH);
-                write_variable_length(check_size, buf);
-                auth.encode(buf, check_size)
-            }
-        }
-    }
+    fn encode(&self, buf: &mut BytePages, check_size: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 pub(crate) fn encoded_size_opt_props(
     user_props: &[UserProperty],
     reason_str: &Option<ByteString>,
     mut limit: u32,
-) -> usize {
-    let mut len = 0;
-    for up in user_props {
-        let prop_len = 1 + up.encoded_size(); // prop type byte + key.len() + val.len()
-        if prop_len > limit as usize {
-            return len;
-        }
-        limit -= prop_len as u32;
-        len += prop_len;
-    }
-
-    if let Some(reason) = reason_str {
-        let reason_len = 1 + reason.encoded_size(); // safety: TODO: CHECK string length for being out of bounds (> u16::max_value())?
-        if reason_len <= limit as usize {
-            len += reason_len;
-        }
-    }
-
-    len
-}
+) -> usize { panic!("STUB: not implemented") }
 
 pub(crate) fn encode_opt_props(
     user_props: &[UserProperty],
     reason_str: &Option<ByteString>,
     buf: &mut BytePages,
     mut size: u32,
-) -> Result<(), EncodeError> {
-    for up in user_props {
-        let prop_len = 1 + up.0.encoded_size() + up.1.encoded_size(); // prop_type.len() + key.len() + val.len()
-        if prop_len > size as usize {
-            return Ok(());
-        }
-        buf.put_u8(pt::USER);
-        up.encode(buf)?;
-        size -= prop_len as u32; // safe: checked it's less already
-    }
+) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 
-    if let Some(reason) = reason_str
-        && reason.len() < size as usize
-    {
-        buf.put_u8(pt::REASON_STRING);
-        reason.encode(buf)?;
-    }
+pub(super) fn encoded_property_size<T: Encode>(v: &Option<T>) -> usize { panic!("STUB: not implemented") }
 
-    // todo: debug_assert remaining is 0
-
-    Ok(())
-}
-
-pub(super) fn encoded_property_size<T: Encode>(v: &Option<T>) -> usize {
-    v.as_ref().map_or(0, |v| 1 + v.encoded_size()) // 1 - property type byte
-}
-
-pub(super) fn encoded_property_size_default<T: Encode + PartialEq>(v: &T, default: T) -> usize {
-    if *v == default {
-        0
-    } else {
-        1 + v.encoded_size() // 1 - property type byte
-    }
-}
+pub(super) fn encoded_property_size_default<T: Encode + PartialEq>(v: &T, default: T) -> usize { panic!("STUB: not implemented") }
 
 pub(super) fn encode_property<T: Encode>(
     v: &Option<T>,
     prop_type: u8,
     buf: &mut BytePages,
-) -> Result<(), EncodeError> {
-    if let Some(v) = v {
-        buf.put_u8(prop_type);
-        v.encode(buf)
-    } else {
-        Ok(())
-    }
-}
+) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 
 pub(super) fn encode_property_default<T: Encode + PartialEq>(
     v: &T,
     default: T,
     prop_type: u8,
     buf: &mut BytePages,
-) -> Result<(), EncodeError> {
-    if *v == default {
-        Ok(())
-    } else {
-        buf.put_u8(prop_type);
-        v.encode(buf)
-    }
-}
+) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 
-/// Calculates length of variable length integer based on its value
-pub(crate) fn var_int_len(val: usize) -> u32 {
-    #[cfg(target_pointer_width = "16")]
-    panic!("16-bit platforms are not supported");
-    #[cfg(target_pointer_width = "32")]
-    const MAP: [u32; 33] = [
-        5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1,
-        1, 1, 1, 1,
-    ];
-    #[cfg(target_pointer_width = "64")]
-    const MAP: [u32; 65] = [
-        10, 9, 9, 9, 9, 9, 9, 9, 8, 8, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6,
-        5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 1,
-        1, 1, 1, 1, 1, 1, 1,
-    ];
-    let zeros = val.leading_zeros();
-    unsafe { *MAP.get_unchecked(zeros as usize) } // safety: zeros will never be more than 65 by definition.
-}
+pub(crate) fn var_int_len(val: usize) -> u32 { panic!("STUB: not implemented") }
 
-/// Calculates length of variable length integer based on its value
-pub(crate) fn var_int_len_u32(val: u32) -> u32 {
-    const MAP: [u32; 33] = [
-        5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1,
-        1, 1, 1, 1,
-    ];
-    let zeros = val.leading_zeros();
-    unsafe { *MAP.get_unchecked(zeros as usize) } // safety: zeros will never be more than 32 by definition.
-}
+pub(crate) fn var_int_len_u32(val: u32) -> u32 { panic!("STUB: not implemented") }
 
-/// Calculates `len` from `var_int_len(len) + len` value
-pub(crate) fn var_int_len_from_size(val: u32) -> u32 {
-    let over_size = var_int_len_u32(val);
-    let res = val - over_size + 1;
-    val - var_int_len_u32(res)
-}
+pub(crate) fn var_int_len_from_size(val: u32) -> u32 { panic!("STUB: not implemented") }
 
 impl Encode for UserProperties {
-    fn encoded_size(&self) -> usize {
-        let mut len = 0;
-        for prop in self {
-            len += 1 + prop.encoded_size();
-        }
-        len
-    }
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        for prop in self {
-            buf.put_u8(pt::USER);
-            prop.encode(buf)?;
-        }
-        Ok(())
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
-pub(super) fn reduce_limit(limit: u32, reduction: usize) -> u32 {
-    if reduction > limit as usize {
-        return 0;
-    }
-    limit - (reduction as u32) // safe: by now we're sure `reduction` fits in u32
-}
+pub(super) fn reduce_limit(limit: u32, reduction: usize) -> u32 { panic!("STUB: not implemented") }
 
 #[cfg(test)]
 mod tests {
@@ -293,7 +96,6 @@ mod tests {
             properties: PublishProperties::default(),
         };
 
-        //assert_eq!(p.encoded_size(MAX_PACKET_SIZE), 265);
         p.encode(&mut v, 265).unwrap();
         assert_eq!(&v.freeze()[..3], b"\x3d\x89\x02".as_ref());
     }

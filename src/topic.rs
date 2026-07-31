@@ -3,33 +3,7 @@ use std::{fmt, fmt::Write, io};
 use ntex_bytes::ByteString;
 
 #[allow(clippy::match_same_arms)]
-pub(crate) fn is_valid(topic: &str) -> bool {
-    if topic.is_empty() {
-        false
-    } else {
-        enum PrevState {
-            None,
-            LevelSep,
-            SingleWildcard,
-            MultiWildcard,
-            Other,
-        }
-
-        let mut previous = PrevState::None;
-        for current in topic.bytes() {
-            previous = match (current, &previous) {
-                (_, PrevState::MultiWildcard) => return false, // `#` is not last char
-                (b'+', PrevState::None | PrevState::LevelSep) => PrevState::SingleWildcard,
-                (b'#', PrevState::None | PrevState::LevelSep) => PrevState::MultiWildcard,
-                (b'+' | b'#', _) => return false, // `+` or `#` after char other than `/`
-                (b'/', _) => PrevState::LevelSep,
-                (_, PrevState::SingleWildcard) => return false, // `+` is followed by char other than `/`
-                _ => PrevState::Other,
-            }
-        }
-        true
-    }
-}
+pub(crate) fn is_valid(topic: &str) -> bool { panic!("STUB: not implemented") }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TopicFilterError {
@@ -42,107 +16,46 @@ pub enum TopicFilterLevel {
     Normal(ByteString),
     System(ByteString),
     Blank,
-    SingleWildcard, // Single level wildcard +
-    MultiWildcard,  // Multi-level wildcard #
+    SingleWildcard, 
+    MultiWildcard,  
 }
 
 impl TopicFilterLevel {
-    fn is_valid(&self) -> bool {
-        match *self {
-            TopicFilterLevel::Normal(ref s) | TopicFilterLevel::System(ref s) => {
-                !s.contains(['+', '#'])
-            }
-            _ => true,
-        }
-    }
+    fn is_valid(&self) -> bool { panic!("STUB: not implemented") }
 }
 
 fn match_topic<T: MatchLevel, L: Iterator<Item = T>>(
     superset: &TopicFilter,
     subset: L,
-) -> bool {
-    let mut superset = superset.0.iter();
-
-    for (index, subset_level) in subset.enumerate() {
-        match superset.next() {
-            Some(TopicFilterLevel::SingleWildcard) => {
-                if !subset_level.match_level(&TopicFilterLevel::SingleWildcard, index) {
-                    return false;
-                }
-            }
-            Some(TopicFilterLevel::MultiWildcard) => {
-                return subset_level.match_level(&TopicFilterLevel::MultiWildcard, index);
-            }
-            Some(level) if subset_level.match_level(level, index) => (),
-            _ => return false,
-        }
-    }
-
-    match superset.next() {
-        Some(&TopicFilterLevel::MultiWildcard) | None => true,
-        Some(_) => false,
-    }
-}
+) -> bool { panic!("STUB: not implemented") }
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct TopicFilter(Vec<TopicFilterLevel>);
 
 impl TopicFilter {
-    pub fn levels(&self) -> &[TopicFilterLevel] {
-        &self.0
-    }
+    pub fn levels(&self) -> &[TopicFilterLevel] { panic!("STUB: not implemented") }
 
-    fn is_valid(&self) -> bool {
-        self.0
-            .iter()
-            .position(|level| !level.is_valid())
-            .or_else(|| {
-                self.0.iter().enumerate().position(|(pos, level)| match *level {
-                    TopicFilterLevel::MultiWildcard => pos != self.0.len() - 1,
-                    TopicFilterLevel::System(_) => pos != 0,
-                    _ => false,
-                })
-            })
-            .is_none()
-    }
+    fn is_valid(&self) -> bool { panic!("STUB: not implemented") }
 
-    pub fn matches_filter(&self, topic: &TopicFilter) -> bool {
-        match_topic(self, topic.0.iter())
-    }
+    pub fn matches_filter(&self, topic: &TopicFilter) -> bool { panic!("STUB: not implemented") }
 
-    pub fn matches_topic<S: AsRef<str> + ?Sized>(&self, topic: &S) -> bool {
-        match_topic(self, topic.as_ref().split('/'))
-    }
+    pub fn matches_topic<S: AsRef<str> + ?Sized>(&self, topic: &S) -> bool { panic!("STUB: not implemented") }
 }
 
 impl TryFrom<&[TopicFilterLevel]> for TopicFilter {
     type Error = TopicFilterError;
 
-    fn try_from(s: &[TopicFilterLevel]) -> Result<Self, Self::Error> {
-        let mut v = vec![];
-        v.extend_from_slice(s);
-
-        TopicFilter::try_from(v)
-    }
+    fn try_from(s: &[TopicFilterLevel]) -> Result<Self, Self::Error> { panic!("STUB: not implemented") }
 }
 
 impl TryFrom<Vec<TopicFilterLevel>> for TopicFilter {
     type Error = TopicFilterError;
 
-    fn try_from(v: Vec<TopicFilterLevel>) -> Result<Self, Self::Error> {
-        let tf = TopicFilter(v);
-        if tf.is_valid() {
-            Ok(tf)
-        } else {
-            Err(TopicFilterError::InvalidTopic)
-        }
-    }
+    fn try_from(v: Vec<TopicFilterLevel>) -> Result<Self, Self::Error> { panic!("STUB: not implemented") }
 }
 
 impl From<TopicFilter> for Vec<TopicFilterLevel> {
-    fn from(t: TopicFilter) -> Self {
-        t.0
-    }
+    fn from(t: TopicFilter) -> Self { panic!("STUB: not implemented") }
 }
 
 trait MatchLevel {
@@ -150,165 +63,55 @@ trait MatchLevel {
 }
 
 impl MatchLevel for TopicFilterLevel {
-    fn match_level(&self, level: &TopicFilterLevel, index: usize) -> bool {
-        match_level_impl(self, level, index)
-    }
+    fn match_level(&self, level: &TopicFilterLevel, index: usize) -> bool { panic!("STUB: not implemented") }
 }
 
 impl MatchLevel for &TopicFilterLevel {
-    fn match_level(&self, level: &TopicFilterLevel, index: usize) -> bool {
-        match_level_impl(self, level, index)
-    }
+    fn match_level(&self, level: &TopicFilterLevel, index: usize) -> bool { panic!("STUB: not implemented") }
 }
 
 fn match_level_impl(
     subset_level: &TopicFilterLevel,
     superset_level: &TopicFilterLevel,
     _index: usize,
-) -> bool {
-    match superset_level {
-        TopicFilterLevel::Normal(rhs) => {
-            matches!(subset_level, TopicFilterLevel::Normal(lhs) if lhs == rhs)
-        }
-        TopicFilterLevel::System(rhs) => {
-            matches!(subset_level, TopicFilterLevel::System(lhs) if lhs == rhs)
-        }
-        TopicFilterLevel::Blank => *subset_level == TopicFilterLevel::Blank,
-        TopicFilterLevel::SingleWildcard => *subset_level != TopicFilterLevel::MultiWildcard,
-        TopicFilterLevel::MultiWildcard => true,
-    }
-}
+) -> bool { panic!("STUB: not implemented") }
 
 impl<T: AsRef<str>> MatchLevel for T {
-    fn match_level(&self, level: &TopicFilterLevel, index: usize) -> bool {
-        match level {
-            TopicFilterLevel::Normal(lhs) => lhs == self.as_ref(),
-            TopicFilterLevel::System(lhs) => is_system(self) && lhs == self.as_ref(),
-            TopicFilterLevel::Blank => self.as_ref().is_empty(),
-            TopicFilterLevel::SingleWildcard | TopicFilterLevel::MultiWildcard => {
-                !(index == 0 && is_system(self))
-            }
-        }
-    }
+    fn match_level(&self, level: &TopicFilterLevel, index: usize) -> bool { panic!("STUB: not implemented") }
 }
 
 impl TryFrom<ByteString> for TopicFilter {
     type Error = TopicFilterError;
 
-    fn try_from(value: ByteString) -> Result<Self, Self::Error> {
-        if value.is_empty() {
-            return Err(TopicFilterError::InvalidTopic);
-        }
-
-        value
-            .split('/')
-            .enumerate()
-            .map(|(idx, level)| match level {
-                "+" => Ok(TopicFilterLevel::SingleWildcard),
-                "#" => Ok(TopicFilterLevel::MultiWildcard),
-                "" => Ok(TopicFilterLevel::Blank),
-                _ => {
-                    if level.contains(['+', '#']) {
-                        Err(TopicFilterError::InvalidLevel)
-                    } else if idx == 0 && is_system(level) {
-                        Ok(TopicFilterLevel::System(recover_bstr(&value, level)))
-                    } else {
-                        Ok(TopicFilterLevel::Normal(recover_bstr(&value, level)))
-                    }
-                }
-            })
-            .collect::<Result<Vec<_>, TopicFilterError>>()
-            .map(TopicFilter)
-            .and_then(|topic| {
-                if topic.is_valid() {
-                    Ok(topic)
-                } else {
-                    Err(TopicFilterError::InvalidTopic)
-                }
-            })
-    }
+    fn try_from(value: ByteString) -> Result<Self, Self::Error> { panic!("STUB: not implemented") }
 }
 
 impl std::str::FromStr for TopicFilter {
     type Err = TopicFilterError;
 
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let s: ByteString = value.into();
-        TopicFilter::try_from(s)
-    }
+    fn from_str(value: &str) -> Result<Self, Self::Err> { panic!("STUB: not implemented") }
 }
 
 impl fmt::Display for TopicFilterLevel {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            TopicFilterLevel::Normal(s) | TopicFilterLevel::System(s) => {
-                f.write_str(s.as_str())
-            }
-            TopicFilterLevel::Blank => Ok(()),
-            TopicFilterLevel::SingleWildcard => f.write_char('+'),
-            TopicFilterLevel::MultiWildcard => f.write_char('#'),
-        }
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl fmt::Display for TopicFilter {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut iter = self.0.iter();
-        let mut level = iter.next().unwrap();
-        loop {
-            level.fmt(f)?;
-            if let Some(l) = iter.next() {
-                level = l;
-                f.write_char('/')?;
-            } else {
-                break;
-            }
-        }
-        Ok(())
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 #[allow(dead_code)]
 pub(crate) trait WriteTopicExt: io::Write {
-    fn write_level(&mut self, level: &TopicFilterLevel) -> io::Result<usize> {
-        match *level {
-            TopicFilterLevel::Normal(ref s) | TopicFilterLevel::System(ref s) => {
-                self.write(s.as_str().as_bytes())
-            }
-            TopicFilterLevel::Blank => Ok(0),
-            TopicFilterLevel::SingleWildcard => self.write(b"+"),
-            TopicFilterLevel::MultiWildcard => self.write(b"#"),
-        }
-    }
+    fn write_level(&mut self, level: &TopicFilterLevel) -> io::Result<usize> { panic!("STUB: not implemented") }
 
-    fn write_topic(&mut self, topic: &TopicFilter) -> io::Result<usize> {
-        let mut n = 0;
-        let mut iter = topic.0.iter();
-        let mut level = iter.next().unwrap();
-        loop {
-            n += self.write_level(level)?;
-            if let Some(l) = iter.next() {
-                level = l;
-                n += self.write(b"/")?;
-            } else {
-                break;
-            }
-        }
-        Ok(n)
-    }
+    fn write_topic(&mut self, topic: &TopicFilter) -> io::Result<usize> { panic!("STUB: not implemented") }
 }
 
 impl<W: io::Write + ?Sized> WriteTopicExt for W {}
 
-fn is_system<T: AsRef<str>>(s: T) -> bool {
-    s.as_ref().starts_with('$')
-}
+fn is_system<T: AsRef<str>>(s: T) -> bool { panic!("STUB: not implemented") }
 
-fn recover_bstr(superset: &ByteString, subset: &str) -> ByteString {
-    unsafe {
-        ByteString::from_bytes_unchecked(superset.as_bytes().slice_ref(subset.as_bytes()))
-    }
-}
+fn recover_bstr(superset: &ByteString, subset: &str) -> ByteString { panic!("STUB: not implemented") }
 
 #[cfg(test)]
 mod tests {

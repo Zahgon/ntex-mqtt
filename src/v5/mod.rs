@@ -1,4 +1,3 @@
-//! MQTT5 Client/Server framework
 
 pub mod client;
 pub mod codec;
@@ -30,16 +29,7 @@ pub use crate::{error, topic::TopicFilter, topic::TopicFilterError, types::QoS};
 
 const RECEIVE_MAX_DEFAULT: NonZeroU16 = NonZeroU16::new(65_535).unwrap();
 
-fn disconnect(msg: &'static str) -> ProtocolMessageAck {
-    log::error!("{msg}");
-
-    ProtocolMessageAck {
-        packet: control::Pkt::Disconnect(codec::Disconnect::new(
-            codec::DisconnectReasonCode::ImplementationSpecificError,
-        )),
-        disconnect: true,
-    }
-}
+fn disconnect(msg: &'static str) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 
 pub trait ToPublishAck {
     type Error;
@@ -52,13 +42,9 @@ pub trait ToPublishAck {
 impl<E: ToPublishAck + Clone> ToPublishAck for Error<E> {
     type Error = Error<E::Error>;
 
-    fn try_ack(self) -> Result<PublishAck, Self::Error> {
-        self.try_map(ToPublishAck::try_ack)
-    }
+    fn try_ack(self) -> Result<PublishAck, Self::Error> { panic!("STUB: not implemented") }
 
-    fn into_error(self) -> Self::Error {
-        self.map(ToPublishAck::into_error)
-    }
+    fn into_error(self) -> Self::Error { panic!("STUB: not implemented") }
 }
 
 impl<E> ToPublishAck for E
@@ -67,11 +53,7 @@ where
 {
     type Error = E::Error;
 
-    fn try_ack(self) -> Result<PublishAck, Self::Error> {
-        self.try_into()
-    }
+    fn try_ack(self) -> Result<PublishAck, Self::Error> { panic!("STUB: not implemented") }
 
-    fn into_error(self) -> Self::Error {
-        self.into()
-    }
+    fn into_error(self) -> Self::Error { panic!("STUB: not implemented") }
 }

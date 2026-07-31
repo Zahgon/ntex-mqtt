@@ -25,123 +25,84 @@ pub use publish::*;
 pub use subscribe::*;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-/// MQTT Control Packets
+
 pub enum Packet {
-    /// Client request to connect to Server
+    
     Connect(Box<Connect>),
-    /// Connect acknowledgment
+    
     ConnectAck(Box<ConnectAck>),
-    /// Publish acknowledgment
+    
     PublishAck(PublishAck),
-    /// Publish received (assured delivery part 1)
+    
     PublishReceived(PublishAck),
-    /// Publish release (assured delivery part 2)
+    
     PublishRelease(PublishAck2),
-    /// Publish complete (assured delivery part 3)
+    
     PublishComplete(PublishAck2),
-    /// Client subscribe request
+    
     Subscribe(Subscribe),
-    /// Subscribe acknowledgment
+    
     SubscribeAck(SubscribeAck),
-    /// Unsubscribe request
+    
     Unsubscribe(Unsubscribe),
-    /// Unsubscribe acknowledgment
+    
     UnsubscribeAck(UnsubscribeAck),
-    /// PING request
+    
     PingRequest,
-    /// PING response
+    
     PingResponse,
-    /// Disconnection is advertised
+    
     Disconnect(Disconnect),
-    /// Auth exchange
+    
     Auth(Auth),
 }
 
 impl Packet {
-    pub fn packet_type(&self) -> u8 {
-        match self {
-            Packet::Connect(_) => packet_type::CONNECT,
-            Packet::ConnectAck(_) => packet_type::CONNACK,
-            Packet::PublishAck(_) => packet_type::PUBACK,
-            Packet::PublishReceived(_) => packet_type::PUBREC,
-            Packet::PublishRelease(_) => packet_type::PUBREL,
-            Packet::PublishComplete(_) => packet_type::PUBCOMP,
-            Packet::Subscribe(_) => packet_type::SUBSCRIBE,
-            Packet::SubscribeAck(_) => packet_type::SUBACK,
-            Packet::Unsubscribe(_) => packet_type::UNSUBSCRIBE,
-            Packet::UnsubscribeAck(_) => packet_type::UNSUBACK,
-            Packet::PingRequest => packet_type::PINGREQ,
-            Packet::PingResponse => packet_type::PINGRESP,
-            Packet::Disconnect(_) => packet_type::DISCONNECT,
-            Packet::Auth(_) => packet_type::AUTH,
-        }
-    }
+    pub fn packet_type(&self) -> u8 { panic!("STUB: not implemented") }
 }
 
 impl From<Connect> for Packet {
-    fn from(pkt: Connect) -> Self {
-        Self::Connect(Box::new(pkt))
-    }
+    fn from(pkt: Connect) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<Box<Connect>> for Packet {
-    fn from(pkt: Box<Connect>) -> Self {
-        Self::Connect(pkt)
-    }
+    fn from(pkt: Box<Connect>) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<ConnectAck> for Packet {
-    fn from(pkt: ConnectAck) -> Self {
-        Self::ConnectAck(Box::new(pkt))
-    }
+    fn from(pkt: ConnectAck) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<Box<ConnectAck>> for Packet {
-    fn from(pkt: Box<ConnectAck>) -> Self {
-        Self::ConnectAck(pkt)
-    }
+    fn from(pkt: Box<ConnectAck>) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<PublishAck> for Packet {
-    fn from(pkt: PublishAck) -> Self {
-        Self::PublishAck(pkt)
-    }
+    fn from(pkt: PublishAck) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<Subscribe> for Packet {
-    fn from(pkt: Subscribe) -> Self {
-        Self::Subscribe(pkt)
-    }
+    fn from(pkt: Subscribe) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<SubscribeAck> for Packet {
-    fn from(pkt: SubscribeAck) -> Self {
-        Self::SubscribeAck(pkt)
-    }
+    fn from(pkt: SubscribeAck) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<Unsubscribe> for Packet {
-    fn from(pkt: Unsubscribe) -> Self {
-        Self::Unsubscribe(pkt)
-    }
+    fn from(pkt: Unsubscribe) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<UnsubscribeAck> for Packet {
-    fn from(pkt: UnsubscribeAck) -> Self {
-        Self::UnsubscribeAck(pkt)
-    }
+    fn from(pkt: UnsubscribeAck) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<Disconnect> for Packet {
-    fn from(pkt: Disconnect) -> Self {
-        Self::Disconnect(pkt)
-    }
+    fn from(pkt: Disconnect) -> Self { panic!("STUB: not implemented") }
 }
 
 impl From<Auth> for Packet {
-    fn from(pkt: Auth) -> Self {
-        Self::Auth(pkt)
-    }
+    fn from(pkt: Auth) -> Self { panic!("STUB: not implemented") }
 }
 
 pub(super) mod property_type {
@@ -183,51 +144,16 @@ mod ack_props {
         properties: &[UserProperty],
         reason_string: &Option<ByteString>,
         limit: u32,
-    ) -> usize {
-        if limit < 4 {
-            // todo: not really needed in practice
-            return 1; // 1 byte to encode property length = 0
-        }
-
-        let len = encode::encoded_size_opt_props(properties, reason_string, limit - 4);
-        encode::var_int_len(len) as usize + len
-    }
+    ) -> usize { panic!("STUB: not implemented") }
 
     pub(crate) fn encode(
         properties: &[UserProperty],
         reason_string: &Option<ByteString>,
         buf: &mut BytePages,
         size: u32,
-    ) -> Result<(), EncodeError> {
-        debug_assert!(size > 0); // formalize in signature?
+    ) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 
-        if size == 1 {
-            // empty properties
-            buf.put_u8(0);
-            return Ok(());
-        }
-
-        let size = encode::var_int_len_from_size(size);
-        write_variable_length(size, buf);
-        encode::encode_opt_props(properties, reason_string, buf, size)
-    }
-
-    /// Parses ACK properties (User and Reason String properties) from `src`
     pub(crate) fn decode(
         src: &mut Bytes,
-    ) -> Result<(UserProperties, Option<ByteString>), DecodeError> {
-        let prop_src = &mut take_properties(src)?;
-        let mut reason_string = None;
-        let mut user_props = Vec::new();
-        while prop_src.has_remaining() {
-            let prop_id = prop_src.get_u8();
-            match prop_id {
-                pt::REASON_STRING => reason_string.read_value(prop_src)?,
-                pt::USER => user_props.push(<(ByteString, ByteString)>::decode(prop_src)?),
-                _ => return Err(DecodeError::MalformedPacket),
-            }
-        }
-
-        Ok((user_props, reason_string))
-    }
+    ) -> Result<(UserProperties, Option<ByteString>), DecodeError> { panic!("STUB: not implemented") }
 }

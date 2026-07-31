@@ -4,24 +4,19 @@ use ntex_bytes::ByteString;
 
 use crate::{error, types::QoS, v5::codec};
 
-/// MQTT protocol–related messages.
-///
-/// The control service is always called with these frames one at a time.
-/// Unhandled messages are stored in a buffer. Other types of messages may be
-/// handled out of order.
 #[derive(Debug)]
 pub enum ProtocolMessage {
-    /// `Auth` packet from a client
+    
     Auth(Auth),
-    /// `PublishRelease` packet from a client
+    
     PublishRelease(PublishRelease),
-    /// `Subscribe` packet from a client
+    
     Subscribe(Subscribe),
-    /// `Unsubscribe` packet from a client
+    
     Unsubscribe(Unsubscribe),
-    /// `Disconnect` packet from a client
+    
     Disconnect(Disconnect),
-    /// `Ping` packet from a client
+    
     Ping(Ping),
 }
 
@@ -32,7 +27,6 @@ pub(crate) enum Pkt {
     Packet(codec::Packet),
 }
 
-/// Protocol message handling result
 #[derive(Debug)]
 pub struct ProtocolMessageAck {
     pub(crate) packet: Pkt,
@@ -40,70 +34,24 @@ pub struct ProtocolMessageAck {
 }
 
 impl ProtocolMessage {
-    /// Create a new message from AUTH packet.
-    #[doc(hidden)]
-    pub fn auth(pkt: codec::Auth, size: u32) -> Self {
-        ProtocolMessage::Auth(Auth { pkt, size })
-    }
+    
+    pub fn auth(pkt: codec::Auth, size: u32) -> Self { panic!("STUB: not implemented") }
 
-    pub(crate) fn pubrel(pkt: codec::PublishAck2, size: u32) -> Self {
-        ProtocolMessage::PublishRelease(PublishRelease::new(pkt, size))
-    }
+    pub(crate) fn pubrel(pkt: codec::PublishAck2, size: u32) -> Self { panic!("STUB: not implemented") }
 
-    /// Create a new message from SUBSCRIBE packet.
-    #[doc(hidden)]
-    pub fn subscribe(pkt: codec::Subscribe, size: u32) -> Self {
-        ProtocolMessage::Subscribe(Subscribe::new(pkt, size))
-    }
+    pub fn subscribe(pkt: codec::Subscribe, size: u32) -> Self { panic!("STUB: not implemented") }
 
-    /// Create a new message from UNSUBSCRIBE packet.
-    #[doc(hidden)]
-    pub fn unsubscribe(pkt: codec::Unsubscribe, size: u32) -> Self {
-        ProtocolMessage::Unsubscribe(Unsubscribe::new(pkt, size))
-    }
+    pub fn unsubscribe(pkt: codec::Unsubscribe, size: u32) -> Self { panic!("STUB: not implemented") }
 
-    /// Create a new PING message.
-    #[doc(hidden)]
-    pub fn ping() -> Self {
-        ProtocolMessage::Ping(Ping)
-    }
+    pub fn ping() -> Self { panic!("STUB: not implemented") }
 
-    /// Create a new message from DISCONNECT packet.
-    #[doc(hidden)]
-    pub fn remote_disconnect(pkt: codec::Disconnect, size: u32) -> Self {
-        ProtocolMessage::Disconnect(Disconnect(pkt, size))
-    }
+    pub fn remote_disconnect(pkt: codec::Disconnect, size: u32) -> Self { panic!("STUB: not implemented") }
 
-    /// Disconnects the client by sending DISCONNECT packet
-    /// with `NormalDisconnection` reason code.
-    pub fn disconnect(&self) -> ProtocolMessageAck {
-        let pkt = codec::Disconnect {
-            reason_code: codec::DisconnectReasonCode::NormalDisconnection,
-            session_expiry_interval_secs: None,
-            server_reference: None,
-            reason_string: None,
-            user_properties: Vec::default(),
-        };
-        ProtocolMessageAck { packet: Pkt::Disconnect(pkt), disconnect: true }
-    }
+    pub fn disconnect(&self) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 
-    /// Disconnects the client by sending DISCONNECT packet
-    /// with provided reason code.
-    pub fn disconnect_with(&self, pkt: codec::Disconnect) -> ProtocolMessageAck {
-        ProtocolMessageAck { packet: Pkt::Disconnect(pkt), disconnect: true }
-    }
+    pub fn disconnect_with(&self, pkt: codec::Disconnect) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 
-    /// Ack control message
-    pub fn ack(self) -> ProtocolMessageAck {
-        match self {
-            ProtocolMessage::Auth(_) => super::disconnect(error::ERR_AUTH_NOT_SUP),
-            ProtocolMessage::PublishRelease(msg) => msg.ack(),
-            ProtocolMessage::Subscribe(msg) => msg.ack(),
-            ProtocolMessage::Unsubscribe(msg) => msg.ack(),
-            ProtocolMessage::Disconnect(msg) => msg.ack(),
-            ProtocolMessage::Ping(msg) => msg.ack(),
-        }
-    }
+    pub fn ack(self) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 }
 
 #[derive(Debug)]
@@ -113,22 +61,12 @@ pub struct Auth {
 }
 
 impl Auth {
-    /// Returns reference to auth packet
-    pub fn packet(&self) -> &codec::Auth {
-        &self.pkt
-    }
+    
+    pub fn packet(&self) -> &codec::Auth { panic!("STUB: not implemented") }
 
-    /// Returns size of the packet
-    pub fn packet_size(&self) -> u32 {
-        self.size
-    }
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 
-    pub fn ack(self, response: codec::Auth) -> ProtocolMessageAck {
-        ProtocolMessageAck {
-            packet: Pkt::Packet(codec::Packet::Auth(response)),
-            disconnect: false,
-        }
-    }
+    pub fn ack(self, response: codec::Auth) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 }
 
 #[derive(Debug, Clone)]
@@ -139,91 +77,47 @@ pub struct PublishRelease {
 }
 
 impl PublishRelease {
-    pub(crate) fn new(pkt: codec::PublishAck2, size: u32) -> Self {
-        let packet_id = pkt.packet_id;
-        Self {
-            pkt,
-            size,
-            result: codec::PublishAck2 {
-                packet_id,
-                reason_code: codec::PublishAck2Reason::Success,
-                properties: codec::UserProperties::default(),
-                reason_string: None,
-            },
-        }
-    }
+    pub(crate) fn new(pkt: codec::PublishAck2, size: u32) -> Self { panic!("STUB: not implemented") }
 
-    /// Returns reference to auth packet
-    pub fn packet(&self) -> &codec::PublishAck2 {
-        &self.pkt
-    }
+    pub fn packet(&self) -> &codec::PublishAck2 { panic!("STUB: not implemented") }
 
-    /// Returns size of the packet
-    pub fn packet_size(&self) -> u32 {
-        self.size
-    }
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Update user properties
+    
     pub fn properties<F>(mut self, f: F) -> Self
     where
         F: FnOnce(&mut codec::UserProperties),
-    {
-        f(&mut self.result.properties);
-        self
-    }
+    { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Set ack reason string
-    pub fn reason(mut self, reason: ByteString) -> Self {
-        self.result.reason_string = Some(reason);
-        self
-    }
+    
+    pub fn reason(mut self, reason: ByteString) -> Self { panic!("STUB: not implemented") }
 
-    /// Ack publish release
-    pub fn ack(self) -> ProtocolMessageAck {
-        ProtocolMessageAck {
-            packet: Pkt::Packet(codec::Packet::PublishComplete(self.result)),
-            disconnect: false,
-        }
-    }
+    pub fn ack(self) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct Ping;
 
 impl Ping {
-    pub fn ack(self) -> ProtocolMessageAck {
-        ProtocolMessageAck {
-            packet: Pkt::Packet(codec::Packet::PingResponse),
-            disconnect: false,
-        }
-    }
+    pub fn ack(self) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 }
 
 #[derive(Debug, Clone)]
 pub struct Disconnect(pub(crate) codec::Disconnect, pub(crate) u32);
 
 impl Disconnect {
-    /// Returns reference to disconnect packet
-    pub fn packet(&self) -> &codec::Disconnect {
-        &self.0
-    }
+    
+    pub fn packet(&self) -> &codec::Disconnect { panic!("STUB: not implemented") }
 
-    /// Returns size of the packet
-    pub fn packet_size(&self) -> u32 {
-        self.1
-    }
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 
-    /// Ack disconnect message
-    pub fn ack(self) -> ProtocolMessageAck {
-        ProtocolMessageAck { packet: Pkt::None, disconnect: true }
-    }
+    pub fn ack(self) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 }
 
-/// `Subscribe` control message
 #[derive(Debug, Clone)]
 pub struct Subscribe {
     packet: codec::Subscribe,
@@ -232,81 +126,47 @@ pub struct Subscribe {
 }
 
 impl Subscribe {
-    /// Create a new `Subscribe` control message from a Subscribe
-    /// packet
-    pub fn new(packet: codec::Subscribe, size: u32) -> Self {
-        let mut status = Vec::with_capacity(packet.topic_filters.len());
-        (0..packet.topic_filters.len())
-            .for_each(|_| status.push(codec::SubscribeAckReason::UnspecifiedError));
-
-        let result = codec::SubscribeAck {
-            status,
-            packet_id: packet.packet_id,
-            properties: codec::UserProperties::default(),
-            reason_string: None,
-        };
-
-        Self { packet, result, size }
-    }
+    
+    pub fn new(packet: codec::Subscribe, size: u32) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// returns iterator over subscription topics
-    pub fn iter_mut(&mut self) -> SubscribeIter<'_> {
-        SubscribeIter { subs: ptr::from_ref(self).cast_mut(), entry: 0, lt: PhantomData }
-    }
+    
+    pub fn iter_mut(&mut self) -> SubscribeIter<'_> { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Reason string for ack packet
-    pub fn ack_reason(mut self, reason: ByteString) -> Self {
-        self.result.reason_string = Some(reason);
-        self
-    }
+    
+    pub fn ack_reason(mut self, reason: ByteString) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Properties for ack packet
+    
     pub fn ack_properties<F>(mut self, f: F) -> Self
     where
         F: FnOnce(&mut codec::UserProperties),
-    {
-        f(&mut self.result.properties);
-        self
-    }
+    { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Ack Subscribe packet
-    pub fn ack(self) -> ProtocolMessageAck {
-        ProtocolMessageAck {
-            packet: Pkt::Packet(codec::Packet::SubscribeAck(self.result)),
-            disconnect: false,
-        }
-    }
+    
+    pub fn ack(self) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Returns reference to subscribe packet
-    pub fn packet(&self) -> &codec::Subscribe {
-        &self.packet
-    }
+    
+    pub fn packet(&self) -> &codec::Subscribe { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Returns size of the packet
-    pub fn packet_size(&self) -> u32 {
-        self.size
-    }
+    
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 }
 
 impl<'a> IntoIterator for &'a mut Subscribe {
     type Item = Subscription<'a>;
     type IntoIter = SubscribeIter<'a>;
 
-    fn into_iter(self) -> SubscribeIter<'a> {
-        self.iter_mut()
-    }
+    fn into_iter(self) -> SubscribeIter<'a> { panic!("STUB: not implemented") }
 }
 
-/// Iterator over subscription topics
 pub struct SubscribeIter<'a> {
     subs: *mut Subscribe,
     entry: usize,
@@ -314,39 +174,20 @@ pub struct SubscribeIter<'a> {
 }
 
 impl fmt::Debug for SubscribeIter<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("SubscribeIter").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<'a> SubscribeIter<'a> {
-    fn next_unsafe(&mut self) -> Option<Subscription<'a>> {
-        let subs = unsafe { &mut *self.subs };
-
-        if self.entry < subs.packet.topic_filters.len() {
-            let s = Subscription {
-                topic: &subs.packet.topic_filters[self.entry].0,
-                options: &subs.packet.topic_filters[self.entry].1,
-                status: &mut subs.result.status[self.entry],
-            };
-            self.entry += 1;
-            Some(s)
-        } else {
-            None
-        }
-    }
+    fn next_unsafe(&mut self) -> Option<Subscription<'a>> { panic!("STUB: not implemented") }
 }
 
 impl<'a> Iterator for SubscribeIter<'a> {
     type Item = Subscription<'a>;
 
     #[inline]
-    fn next(&mut self) -> Option<Subscription<'a>> {
-        self.next_unsafe()
-    }
+    fn next(&mut self) -> Option<Subscription<'a>> { panic!("STUB: not implemented") }
 }
 
-/// Subscription topic
 #[derive(Debug)]
 pub struct Subscription<'a> {
     topic: &'a ByteString,
@@ -356,42 +197,26 @@ pub struct Subscription<'a> {
 
 impl<'a> Subscription<'a> {
     #[inline]
-    /// subscription topic
-    pub fn topic(&self) -> &'a ByteString {
-        self.topic
-    }
+    
+    pub fn topic(&self) -> &'a ByteString { panic!("STUB: not implemented") }
 
     #[inline]
-    /// subscription options for current topic
-    pub fn options(&self) -> &codec::SubscriptionOptions {
-        self.options
-    }
+    
+    pub fn options(&self) -> &codec::SubscriptionOptions { panic!("STUB: not implemented") }
 
     #[inline]
-    /// fail to subscribe to the topic
-    pub fn fail(&mut self, status: codec::SubscribeAckReason) {
-        *self.status = status;
-    }
+    
+    pub fn fail(&mut self, status: codec::SubscribeAckReason) { panic!("STUB: not implemented") }
 
     #[inline]
-    /// confirm subscription to a topic with specific qos
-    pub fn confirm(&mut self, qos: QoS) {
-        match qos {
-            QoS::AtMostOnce => *self.status = codec::SubscribeAckReason::GrantedQos0,
-            QoS::AtLeastOnce => *self.status = codec::SubscribeAckReason::GrantedQos1,
-            QoS::ExactlyOnce => *self.status = codec::SubscribeAckReason::GrantedQos2,
-        }
-    }
+    
+    pub fn confirm(&mut self, qos: QoS) { panic!("STUB: not implemented") }
 
     #[inline]
-    #[doc(hidden)]
-    /// confirm subscription to a topic with specific qos
-    pub fn subscribe(&mut self, qos: QoS) {
-        self.confirm(qos);
-    }
+    
+    pub fn subscribe(&mut self, qos: QoS) { panic!("STUB: not implemented") }
 }
 
-/// `Unsubscribe` control message
 #[derive(Debug, Clone)]
 pub struct Unsubscribe {
     packet: codec::Unsubscribe,
@@ -400,96 +225,56 @@ pub struct Unsubscribe {
 }
 
 impl Unsubscribe {
-    /// Create a new `Unsubscribe` control `CtlFrame` from an `Unsubscribe`
-    /// packet
-    pub fn new(packet: codec::Unsubscribe, size: u32) -> Self {
-        let mut status = Vec::with_capacity(packet.topic_filters.len());
-        (0..packet.topic_filters.len())
-            .for_each(|_| status.push(codec::UnsubscribeAckReason::Success));
-
-        let result = codec::UnsubscribeAck {
-            status,
-            packet_id: packet.packet_id,
-            properties: codec::UserProperties::default(),
-            reason_string: None,
-        };
-
-        Self { packet, result, size }
-    }
+    
+    pub fn new(packet: codec::Unsubscribe, size: u32) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Unsubscribe packet user properties
-    pub fn properties(&self) -> &codec::UserProperties {
-        &self.packet.user_properties
-    }
+    
+    pub fn properties(&self) -> &codec::UserProperties { panic!("STUB: not implemented") }
 
     #[inline]
-    /// returns iterator over unsubscribe topics
+    
     pub fn iter(&self) -> impl Iterator<Item = &ByteString> {
         self.packet.topic_filters.iter()
     }
 
     #[inline]
-    /// returns iterator over subscription topics
-    pub fn iter_mut(&mut self) -> UnsubscribeIter<'_> {
-        UnsubscribeIter {
-            subs: ptr::from_ref::<Unsubscribe>(self).cast_mut(),
-            entry: 0,
-            lt: PhantomData,
-        }
-    }
+    
+    pub fn iter_mut(&mut self) -> UnsubscribeIter<'_> { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Reason string for ack packet
-    pub fn ack_reason(mut self, reason: ByteString) -> Self {
-        self.result.reason_string = Some(reason);
-        self
-    }
+    
+    pub fn ack_reason(mut self, reason: ByteString) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Properties for ack packet
+    
     pub fn ack_properties<F>(mut self, f: F) -> Self
     where
         F: FnOnce(&mut codec::UserProperties),
-    {
-        f(&mut self.result.properties);
-        self
-    }
+    { panic!("STUB: not implemented") }
 
     #[inline]
-    /// convert packet to a result
-    pub fn ack(self) -> ProtocolMessageAck {
-        ProtocolMessageAck {
-            packet: Pkt::Packet(codec::Packet::UnsubscribeAck(self.result)),
-            disconnect: false,
-        }
-    }
+    
+    pub fn ack(self) -> ProtocolMessageAck { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Returns reference to unsubscribe packet
-    pub fn packet(&self) -> &codec::Unsubscribe {
-        &self.packet
-    }
+    
+    pub fn packet(&self) -> &codec::Unsubscribe { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Returns size of the packet
-    pub fn packet_size(&self) -> u32 {
-        self.size
-    }
+    
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 }
 
 impl<'a> IntoIterator for &'a mut Unsubscribe {
     type Item = UnsubscribeItem<'a>;
     type IntoIter = UnsubscribeIter<'a>;
 
-    fn into_iter(self) -> UnsubscribeIter<'a> {
-        self.iter_mut()
-    }
+    fn into_iter(self) -> UnsubscribeIter<'a> { panic!("STUB: not implemented") }
 }
 
-/// Iterator over topics to unsubscribe
 pub struct UnsubscribeIter<'a> {
     subs: *mut Unsubscribe,
     entry: usize,
@@ -497,38 +282,20 @@ pub struct UnsubscribeIter<'a> {
 }
 
 impl fmt::Debug for UnsubscribeIter<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("UnsubscribeIter").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<'a> UnsubscribeIter<'a> {
-    fn next_unsafe(&mut self) -> Option<UnsubscribeItem<'a>> {
-        let subs = unsafe { &mut *self.subs };
-
-        if self.entry < subs.packet.topic_filters.len() {
-            let s = UnsubscribeItem {
-                topic: &subs.packet.topic_filters[self.entry],
-                status: &mut subs.result.status[self.entry],
-            };
-            self.entry += 1;
-            Some(s)
-        } else {
-            None
-        }
-    }
+    fn next_unsafe(&mut self) -> Option<UnsubscribeItem<'a>> { panic!("STUB: not implemented") }
 }
 
 impl<'a> Iterator for UnsubscribeIter<'a> {
     type Item = UnsubscribeItem<'a>;
 
     #[inline]
-    fn next(&mut self) -> Option<UnsubscribeItem<'a>> {
-        self.next_unsafe()
-    }
+    fn next(&mut self) -> Option<UnsubscribeItem<'a>> { panic!("STUB: not implemented") }
 }
 
-/// Subscription topic
 #[derive(Debug)]
 pub struct UnsubscribeItem<'a> {
     topic: &'a ByteString,
@@ -537,22 +304,16 @@ pub struct UnsubscribeItem<'a> {
 
 impl<'a> UnsubscribeItem<'a> {
     #[inline]
-    /// subscription topic
-    pub fn topic(&self) -> &'a ByteString {
-        self.topic
-    }
+    
+    pub fn topic(&self) -> &'a ByteString { panic!("STUB: not implemented") }
 
     #[inline]
-    /// fail to unsubscribe from the topic
-    pub fn fail(&mut self, status: codec::UnsubscribeAckReason) {
-        *self.status = status;
-    }
+    
+    pub fn fail(&mut self, status: codec::UnsubscribeAckReason) { panic!("STUB: not implemented") }
 
     #[inline]
-    /// unsubscribe from a topic
-    pub fn success(&mut self) {
-        *self.status = codec::UnsubscribeAckReason::Success;
-    }
+    
+    pub fn success(&mut self) { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]
@@ -566,7 +327,7 @@ mod tests {
 
     #[test]
     fn test_debug() {
-        // SubscribeIter via Subscribe
+        
         let mut sub = Subscribe::new(
             codec::Subscribe {
                 packet_id: NonZeroU16::new(1).unwrap(),
@@ -587,7 +348,6 @@ mod tests {
         let iter = sub.iter_mut();
         assert!(format!("{iter:?}").contains("SubscribeIter"));
 
-        // UnsubscribeIter via Unsubscribe
         let mut unsub = Unsubscribe::new(
             codec::Unsubscribe {
                 packet_id: NonZeroU16::new(2).unwrap(),
@@ -599,7 +359,6 @@ mod tests {
         let uiter = unsub.iter_mut();
         assert!(format!("{uiter:?}").contains("UnsubscribeIter"));
 
-        // Ping
         assert!(format!("{Ping:?}").contains("Ping"));
     }
 }

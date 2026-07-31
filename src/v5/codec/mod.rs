@@ -1,4 +1,3 @@
-//! MQTT v5 Protocol codec
 
 use ntex_bytes::{ByteString, Bytes};
 
@@ -30,26 +29,9 @@ pub enum Encoded {
 }
 
 impl From<Packet> for Encoded {
-    fn from(pkt: Packet) -> Encoded {
-        Encoded::Packet(pkt)
-    }
+    fn from(pkt: Packet) -> Encoded { panic!("STUB: not implemented") }
 }
 
 impl std::fmt::Debug for Decoded {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Decoded::Packet(pkt, size) => {
-                f.debug_tuple("Decoded::Packet").field(pkt).field(size).finish()
-            }
-            Decoded::Publish(pkt, _, size) => f
-                .debug_tuple("Decoded::Publish")
-                .field(pkt)
-                .field(&"<REDACTED>")
-                .field(size)
-                .finish(),
-            Decoded::PayloadChunk(_, eof) => {
-                f.debug_tuple("Decoded::Publish").field(&"<REDACTED>").field(eof).finish()
-            }
-        }
-    }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { panic!("STUB: not implemented") }
 }

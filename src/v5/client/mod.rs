@@ -1,4 +1,4 @@
-//! MQTT5 client
+
 use std::num::{NonZeroU16, NonZeroU32};
 
 use ntex_bytes::{ByteString, Bytes};
@@ -26,133 +26,76 @@ pub struct Connect<A: Address> {
 
 impl<A: Address> Connect<A> {
     #[inline]
-    /// Construct new connect message
-    pub fn new(addr: A) -> Self {
-        Self { addr, pkt: codec::Connect::default() }
-    }
+    
+    pub fn new(addr: A) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Construct new connect message with connect packet
-    pub fn with(addr: A, pkt: codec::Connect) -> Self {
-        Self { addr, pkt }
-    }
+    
+    pub fn with(addr: A, pkt: codec::Connect) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Create new client and provide client id
+    
     pub fn client_id<U>(mut self, client_id: U) -> Self
     where
         ByteString: From<U>,
-    {
-        self.pkt.client_id = client_id.into();
-        self
-    }
+    { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// The handling of the Session state.
-    pub fn clean_start(mut self) -> Self {
-        self.pkt.clean_start = true;
-        self
-    }
+    
+    pub fn clean_start(mut self) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// A time interval measured in seconds.
-    ///
-    /// keep-alive is set to 30 seconds by default.
-    pub fn keep_alive(mut self, val: Seconds) -> Self {
-        self.pkt.keep_alive = val.seconds() as u16;
-        self
-    }
+    
+    pub fn keep_alive(mut self, val: Seconds) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Will Message be stored on the Server and associated with the Network Connection.
-    ///
-    /// by default last will value is not set
-    pub fn last_will(mut self, val: codec::LastWill) -> Self {
-        self.pkt.last_will = Some(val);
-        self
-    }
+    
+    pub fn last_will(mut self, val: codec::LastWill) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Set auth-method and auth-data for connect packet.
-    pub fn auth(mut self, method: ByteString, data: Bytes) -> Self {
-        self.pkt.auth_method = Some(method);
-        self.pkt.auth_data = Some(data);
-        self
-    }
+    
+    pub fn auth(mut self, method: ByteString, data: Bytes) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Username can be used by the Server for authentication and authorization.
-    pub fn username(mut self, val: ByteString) -> Self {
-        self.pkt.username = Some(val);
-        self
-    }
+    
+    pub fn username(mut self, val: ByteString) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Password can be used by the Server for authentication and authorization.
-    pub fn password(mut self, val: Bytes) -> Self {
-        self.pkt.password = Some(val);
-        self
-    }
+    
+    pub fn password(mut self, val: Bytes) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Max incoming packet size.
-    ///
-    /// To disable max size limit set value to 0.
-    pub fn max_packet_size(mut self, val: u32) -> Self {
-        if let Some(val) = NonZeroU32::new(val) {
-            self.pkt.max_packet_size = Some(val);
-        } else {
-            self.pkt.max_packet_size = None;
-        }
-        self
-    }
+    
+    pub fn max_packet_size(mut self, val: u32) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Set `receive max`
-    ///
-    /// Number of in-flight incoming publish packets. By default receive max is set to 16 packets.
-    /// To disable in-flight limit set value to 0.
-    pub fn max_receive(mut self, val: u16) -> Self {
-        if let Some(val) = NonZeroU16::new(val) {
-            self.pkt.receive_max = Some(val);
-        } else {
-            self.pkt.receive_max = None;
-        }
-        self
-    }
+    
+    pub fn max_receive(mut self, val: u16) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Update connect user properties
+    
     pub fn properties<F>(mut self, f: F) -> Self
     where
         F: FnOnce(&mut codec::UserProperties),
-    {
-        f(&mut self.pkt.user_properties);
-        self
-    }
+    { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Update connect packet
+    
     pub fn packet<F>(mut self, f: F) -> Self
     where
         F: FnOnce(&mut codec::Connect),
-    {
-        f(&mut self.pkt);
-        self
-    }
+    { panic!("STUB: not implemented") }
 
-    fn into_parts(self) -> (A, codec::Connect) {
-        (self.addr, self.pkt)
-    }
+    fn into_parts(self) -> (A, codec::Connect) { panic!("STUB: not implemented") }
 }

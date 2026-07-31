@@ -61,95 +61,43 @@ pub(super) trait Property {
 }
 
 impl<T: Decode> Property for Option<T> {
-    fn read_value(&mut self, src: &mut Bytes) -> Result<(), DecodeError> {
-        ensure!(self.is_none(), DecodeError::MalformedPacket); // property is set twice while not allowed
-        *self = Some(T::decode(src)?);
-        Ok(())
-    }
+    fn read_value(&mut self, src: &mut Bytes) -> Result<(), DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for bool {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        ensure!(src.has_remaining(), DecodeError::InvalidLength); // expected more data within the field
-        let v = src.get_u8();
-        ensure!(v <= 0x1, DecodeError::MalformedPacket); // value is invalid
-        Ok(v == 0x1)
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for u16 {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        ensure!(src.remaining() >= 2, DecodeError::InvalidLength);
-        Ok(src.get_u16())
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for u32 {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        ensure!(src.remaining() >= 4, DecodeError::InvalidLength); // expected more data within the field
-        let val = src.get_u32();
-        Ok(val)
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for NonZeroU32 {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let val = NonZeroU32::new(u32::decode(src)?).ok_or(DecodeError::MalformedPacket)?;
-        Ok(val)
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for NonZeroU16 {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        NonZeroU16::new(u16::decode(src)?).ok_or(DecodeError::MalformedPacket)
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for Bytes {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let len = u16::decode(src)? as usize;
-        ensure!(src.remaining() >= len, DecodeError::InvalidLength);
-        Ok(src.split_to(len))
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Decode for ByteString {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        ByteString::try_from(Bytes::decode(src)?).map_err(|()| DecodeError::Utf8Error)
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
-pub(crate) fn take_properties(src: &mut Bytes) -> Result<Bytes, DecodeError> {
-    let prop_len = decode_variable_length_cursor(src)?;
-    ensure!(src.remaining() >= prop_len as usize, DecodeError::InvalidLength);
+pub(crate) fn take_properties(src: &mut Bytes) -> Result<Bytes, DecodeError> { panic!("STUB: not implemented") }
 
-    Ok(src.split_to(prop_len as usize))
-}
+pub(crate) fn decode_variable_length(src: &[u8]) -> Result<Option<(u32, usize)>, DecodeError> { panic!("STUB: not implemented") }
 
-pub(crate) fn decode_variable_length(src: &[u8]) -> Result<Option<(u32, usize)>, DecodeError> {
-    let mut cur = Cursor::new(src);
-    match decode_variable_length_cursor(&mut cur) {
-        Ok(len) => Ok(Some((len, cur.position() as usize))),
-        Err(DecodeError::MalformedPacket) => Ok(None),
-        Err(e) => Err(e),
-    }
-}
-
-#[allow(clippy::cast_lossless)] // safe: allow cast through `as` because it is type-safe
-pub(crate) fn decode_variable_length_cursor<B: Buf>(src: &mut B) -> Result<u32, DecodeError> {
-    let mut shift: u32 = 0;
-    let mut len: u32 = 0;
-    loop {
-        ensure!(src.has_remaining(), DecodeError::MalformedPacket);
-        let val = src.get_u8();
-        len += ((val & 0b0111_1111u8) as u32) << shift;
-        if val & 0b1000_0000 == 0 {
-            return Ok(len);
-        }
-        ensure!(shift < 21, DecodeError::InvalidLength);
-        shift += 7;
-    }
-}
+#[allow(clippy::cast_lossless)] 
+pub(crate) fn decode_variable_length_cursor<B: Buf>(src: &mut B) -> Result<u32, DecodeError> { panic!("STUB: not implemented") }
 
 pub(crate) trait Encode {
     fn encoded_size(&self) -> usize;
@@ -158,143 +106,66 @@ pub(crate) trait Encode {
 }
 
 impl<T: Encode> Encode for Option<T> {
-    fn encoded_size(&self) -> usize {
-        if let Some(v) = self { v.encoded_size() } else { 0 }
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        if let Some(v) = self { v.encode(buf) } else { Ok(()) }
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for bool {
-    fn encoded_size(&self) -> usize {
-        1
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        if *self {
-            buf.put_u8(0x1);
-        } else {
-            buf.put_u8(0x0);
-        }
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for u16 {
-    fn encoded_size(&self) -> usize {
-        2
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        buf.put_u16(*self);
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for NonZeroU16 {
-    fn encoded_size(&self) -> usize {
-        2
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        self.get().encode(buf)
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for u32 {
-    fn encoded_size(&self) -> usize {
-        4
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        buf.put_u32(*self);
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for NonZeroU32 {
-    fn encoded_size(&self) -> usize {
-        4
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        self.get().encode(buf)
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for Bytes {
-    fn encoded_size(&self) -> usize {
-        2 + self.len()
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        let len = u16::try_from(self.len()).map_err(|_| EncodeError::InvalidLength)?;
-        buf.put_u16(len);
-        buf.append(self.clone());
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for ByteString {
-    fn encoded_size(&self) -> usize {
-        self.as_bytes().encoded_size()
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        self.as_bytes().encode(buf)
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for (ByteString, ByteString) {
-    fn encoded_size(&self) -> usize {
-        self.0.encoded_size() + self.1.encoded_size()
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        self.0.encode(buf)?;
-        self.1.encode(buf)
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
 impl Encode for &[u8] {
-    fn encoded_size(&self) -> usize {
-        2 + self.len()
-    }
+    fn encoded_size(&self) -> usize { panic!("STUB: not implemented") }
 
-    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> {
-        let len = u16::try_from(self.len()).map_err(|_| EncodeError::InvalidLength)?;
-        buf.put_u16(len);
-        buf.extend_from_slice(self);
-        Ok(())
-    }
+    fn encode(&self, buf: &mut BytePages) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }
 
-pub(crate) fn write_variable_length(len: u32, dst: &mut BytePages) {
-    match len {
-        0..=127 => dst.put_u8(len as u8),
-        128..=16_383 => {
-            dst.put_slice(&[((len & 0b0111_1111) | 0b1000_0000) as u8, (len >> 7) as u8]);
-        }
-        16_384..=2_097_151 => {
-            dst.put_slice(&[
-                ((len & 0b0111_1111) | 0b1000_0000) as u8,
-                (((len >> 7) & 0b0111_1111) | 0b1000_0000) as u8,
-                (len >> 14) as u8,
-            ]);
-        }
-        2_097_152..=268_435_455 => {
-            dst.put_slice(&[
-                ((len & 0b0111_1111) | 0b1000_0000) as u8,
-                (((len >> 7) & 0b0111_1111) | 0b1000_0000) as u8,
-                (((len >> 14) & 0b0111_1111) | 0b1000_0000) as u8,
-                (len >> 21) as u8,
-            ]);
-        }
-        _ => panic!("length is too big"), // todo: verify at higher level
-    }
-}
+pub(crate) fn write_variable_length(len: u32, dst: &mut BytePages) { panic!("STUB: not implemented") }
 
 #[cfg(test)]
 mod tests {
@@ -344,6 +215,5 @@ mod tests {
         write_variable_length(268_435_455, &mut v);
         assert_eq!(v.take().unwrap().freeze(), b"\xff\xff\xff\x7f".as_ref());
 
-        // assert!(v.write_variable_length(MAX_VARIABLE_LENGTH + 1).is_err())
     }
 }

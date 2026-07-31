@@ -13,7 +13,6 @@ use crate::{control, error::MqttError, io::Dispatcher};
 
 use super::{control::ProtocolMessage, dispatcher::create_dispatcher};
 
-/// Mqtt client
 pub struct Client {
     io: IoBoxed,
     shared: Rc<MqttShared>,
@@ -24,17 +23,11 @@ pub struct Client {
 }
 
 impl fmt::Debug for Client {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("v3::Client")
-            .field("keepalive", &self.keepalive)
-            .field("session_present", &self.session_present)
-            .field("max_receive", &self.max_receive)
-            .finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl Client {
-    /// Construct new `Dispatcher` instance with outgoing messages stream.
+    
     pub(super) fn new(
         io: IoBoxed,
         shared: Rc<MqttShared>,
@@ -42,99 +35,34 @@ impl Client {
         keepalive: Seconds,
         max_receive: usize,
         max_buffer_size: usize,
-    ) -> Self {
-        Client { io, shared, keepalive, session_present, max_receive, max_buffer_size }
-    }
+    ) -> Self { panic!("STUB: not implemented") }
 }
 
 impl Client {
     #[inline]
-    /// Get client sink
-    pub fn sink(&self) -> MqttSink {
-        MqttSink::new(self.shared.clone())
-    }
+    
+    pub fn sink(&self) -> MqttSink { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Indicates whether there is already stored Session state
-    pub fn session_present(&self) -> bool {
-        self.session_present
-    }
+    
+    pub fn session_present(&self) -> bool { panic!("STUB: not implemented") }
 
-    /// Configure mqtt resource for a specific topic
     pub fn resource<T, F, U>(self, address: T, service: F) -> ClientRouter<U::Error, U::Error>
     where
         T: IntoPattern,
         F: IntoService<U, Publish>,
         U: Service<Publish, Response = ()> + 'static,
-    {
-        let mut builder = Router::build();
-        builder.path(address, 0);
-        let handlers = vec![Pipeline::new(boxed::service(service.into_service()))];
+    { panic!("STUB: not implemented") }
 
-        ClientRouter {
-            builder,
-            handlers,
-            io: self.io,
-            shared: self.shared,
-            keepalive: self.keepalive,
-            max_receive: self.max_receive,
-            max_buffer_size: self.max_buffer_size,
-            _t: PhantomData,
-        }
-    }
+    pub async fn start_default(self) { panic!("STUB: not implemented") }
 
-    /// Run client with default control messages handler.
-    ///
-    /// Default handler closes connection on any control message.
-    pub async fn start_default(self) {
-        if self.keepalive.non_zero() {
-            let _ =
-                ntex_util::spawn(keepalive(MqttSink::new(self.shared.clone()), self.keepalive));
-        }
-
-        let dispatcher = create_dispatcher(
-            self.shared.clone(),
-            self.max_receive,
-            self.max_buffer_size,
-            fn_service(|pkt| Ready::Ok(Either::Right(pkt))),
-            fn_service(|_: ProtocolMessage| Ready::<_, ()>::Ok(ProtocolMessage::disconnect())),
-        );
-        let control = ControlService::new(
-            control::DefaultControlService::<Session<()>, (), codec::Encoded>::default(),
-            self.shared.clone(),
-        );
-
-        let _ = Dispatcher::new(self.io, self.shared, dispatcher, control).await;
-    }
-
-    /// Run client with provided control messages handler
     pub async fn start<F, S, E>(self, service: F) -> Result<(), MqttError<E>>
     where
         E: fmt::Debug + 'static,
         F: IntoService<S, ProtocolMessage> + 'static,
         S: Service<ProtocolMessage, Response = ProtocolMessageAck, Error = E> + 'static,
-    {
-        if self.keepalive.non_zero() {
-            let _ =
-                ntex_util::spawn(keepalive(MqttSink::new(self.shared.clone()), self.keepalive));
-        }
+    { panic!("STUB: not implemented") }
 
-        let dispatcher = create_dispatcher(
-            self.shared.clone(),
-            self.max_receive,
-            self.max_buffer_size,
-            fn_service(|pkt| Ready::Ok(Either::Right(pkt))),
-            service.into_service(),
-        );
-        let control = ControlService::new(
-            control::DefaultControlService::<Session<()>, E, codec::Encoded>::default(),
-            self.shared.clone(),
-        );
-
-        Dispatcher::new(self.io, self.shared, dispatcher, control).await
-    }
-
-    /// Run client with provided protocol and control handlers
     pub async fn start_with_control<F, S, E, C>(
         self,
         service: F,
@@ -145,33 +73,13 @@ impl Client {
         F: IntoService<S, ProtocolMessage> + 'static,
         S: Service<ProtocolMessage, Response = ProtocolMessageAck, Error = E> + 'static,
         C: Service<control::Control<E>, Response = Option<codec::Encoded>> + 'static,
-    {
-        if self.keepalive.non_zero() {
-            let _ =
-                ntex_util::spawn(keepalive(MqttSink::new(self.shared.clone()), self.keepalive));
-        }
+    { panic!("STUB: not implemented") }
 
-        let dispatcher = create_dispatcher(
-            self.shared.clone(),
-            self.max_receive,
-            self.max_buffer_size,
-            fn_service(|pkt| Ready::Ok(Either::Right(pkt))),
-            service.into_service(),
-        );
-        let control = ControlService::new(control, self.shared.clone());
-
-        Dispatcher::new(self.io, self.shared, dispatcher, control).await
-    }
-
-    /// Get negotiated io stream and codec
-    pub fn into_inner(self) -> (IoBoxed, codec::Codec) {
-        (self.io, self.shared.codec.clone())
-    }
+    pub fn into_inner(self) -> (IoBoxed, codec::Codec) { panic!("STUB: not implemented") }
 }
 
 type Handler<E> = boxed::BoxService<Publish, (), E>;
 
-/// Mqtt client with routing capabilities
 pub struct ClientRouter<Err, PErr> {
     builder: RouterBuilder<usize>,
     handlers: Vec<Pipeline<Handler<PErr>>>,
@@ -184,12 +92,7 @@ pub struct ClientRouter<Err, PErr> {
 }
 
 impl<Err, PErr> fmt::Debug for ClientRouter<Err, PErr> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("v3::ClientRouter")
-            .field("keepalive", &self.keepalive)
-            .field("max_receive", &self.max_receive)
-            .finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<Err, PErr> ClientRouter<Err, PErr>
@@ -198,65 +101,21 @@ where
     PErr: 'static,
 {
     #[must_use]
-    /// Configure mqtt resource for a specific topic
+    
     pub fn resource<T, F, S>(mut self, address: T, service: F) -> Self
     where
         T: IntoPattern,
         F: IntoService<S, Publish>,
         S: Service<Publish, Response = (), Error = PErr> + 'static,
-    {
-        self.builder.path(address, self.handlers.len());
-        self.handlers.push(Pipeline::new(boxed::service(service.into_service())));
-        self
-    }
+    { panic!("STUB: not implemented") }
 
-    /// Run client with default control messages handler
-    pub async fn start_default(self) {
-        if self.keepalive.non_zero() {
-            let _ =
-                ntex_util::spawn(keepalive(MqttSink::new(self.shared.clone()), self.keepalive));
-        }
+    pub async fn start_default(self) { panic!("STUB: not implemented") }
 
-        let dispatcher = create_dispatcher(
-            self.shared.clone(),
-            self.max_receive,
-            self.max_buffer_size,
-            dispatch(self.builder.finish(), self.handlers),
-            fn_service(|_: ProtocolMessage| Ready::<_, Err>::Ok(ProtocolMessage::disconnect())),
-        );
-        let control = ControlService::new(
-            control::DefaultControlService::<Session<()>, Err, codec::Encoded>::default(),
-            self.shared.clone(),
-        );
-
-        let _ = Dispatcher::new(self.io, self.shared, dispatcher, control).await;
-    }
-
-    /// Run client and handle control messages
     pub async fn start<F, S>(self, service: F) -> Result<(), MqttError<Err>>
     where
         F: IntoService<S, ProtocolMessage>,
         S: Service<ProtocolMessage, Response = ProtocolMessageAck, Error = Err> + 'static,
-    {
-        if self.keepalive.non_zero() {
-            let _ =
-                ntex_util::spawn(keepalive(MqttSink::new(self.shared.clone()), self.keepalive));
-        }
-
-        let dispatcher = create_dispatcher(
-            self.shared.clone(),
-            self.max_receive,
-            self.max_buffer_size,
-            dispatch(self.builder.finish(), self.handlers),
-            service.into_service(),
-        );
-        let control = ControlService::new(
-            control::DefaultControlService::<Session<()>, Err, codec::Encoded>::default(),
-            self.shared.clone(),
-        );
-
-        Dispatcher::new(self.io, self.shared, dispatcher, control).await
-    }
+    { panic!("STUB: not implemented") }
 }
 
 fn dispatch<Err, PErr>(
@@ -271,7 +130,7 @@ where
 
     fn_service(move |mut req: Publish| {
         if let Some((idx, _info)) = router.recognize(req.topic_mut()) {
-            // exec handler
+            
             let idx = *idx;
             let handlers = handlers.clone();
             Either::Left(async move { call(req, handlers[idx].clone()).await })
@@ -285,24 +144,6 @@ async fn call<S, Err, PErr>(req: Publish, srv: Pipeline<S>) -> Result<Either<(),
 where
     S: Service<Publish, Response = (), Error = PErr>,
     Err: From<PErr>,
-{
-    match srv.call(req).await {
-        Ok(()) => Ok(Either::Left(())),
-        Err(err) => Err(err.into()),
-    }
-}
+{ panic!("STUB: not implemented") }
 
-async fn keepalive(sink: MqttSink, timeout: Seconds) {
-    log::debug!("start mqtt client keep-alive task");
-
-    let keepalive = Millis::from(timeout);
-    loop {
-        sleep(keepalive).await;
-
-        if !sink.is_open() || !sink.ping() {
-            // connection is closed
-            log::debug!("mqtt client connection is closed, stopping keep-alive task");
-            break;
-        }
-    }
-}
+async fn keepalive(sink: MqttSink, timeout: Seconds) { panic!("STUB: not implemented") }

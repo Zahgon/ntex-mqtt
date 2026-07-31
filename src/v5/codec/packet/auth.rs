@@ -4,7 +4,6 @@ use crate::error::{DecodeError, EncodeError};
 use crate::utils::{self, Decode, Property};
 use crate::v5::codec::{UserProperties, UserProperty, encode, property_type as pt};
 
-/// AUTH message
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Auth {
     pub reason_code: AuthReasonCode,
@@ -15,7 +14,7 @@ pub struct Auth {
 }
 
 prim_enum! {
-    /// AUTH reason codes
+    
     pub enum AuthReasonCode {
         Success = 0,
         ContinueAuth = 24,
@@ -24,81 +23,15 @@ prim_enum! {
 }
 
 impl Auth {
-    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let auth = if src.has_remaining() {
-            let reason_code = src.get_u8().try_into()?;
-
-            if src.has_remaining() {
-                let mut auth_method = None;
-                let mut auth_data = None;
-                let mut reason_string = None;
-                let mut user_properties = Vec::new();
-
-                if reason_code != AuthReasonCode::Success || src.has_remaining() {
-                    let prop_src = &mut utils::take_properties(src)?;
-                    while prop_src.has_remaining() {
-                        match prop_src.get_u8() {
-                            pt::AUTH_METHOD => auth_method.read_value(prop_src)?,
-                            pt::AUTH_DATA => auth_data.read_value(prop_src)?,
-                            pt::REASON_STRING => reason_string.read_value(prop_src)?,
-                            pt::USER => user_properties.push(UserProperty::decode(prop_src)?),
-                            _ => return Err(DecodeError::MalformedPacket),
-                        }
-                    }
-                    ensure!(!src.has_remaining(), DecodeError::InvalidLength);
-                }
-
-                Self { reason_code, auth_method, auth_data, reason_string, user_properties }
-            } else {
-                Self { reason_code, ..Default::default() }
-            }
-        } else {
-            Self::default()
-        };
-        Ok(auth)
-    }
+    pub(crate) fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 impl Default for Auth {
-    fn default() -> Self {
-        Self {
-            reason_code: AuthReasonCode::Success,
-            auth_method: None,
-            auth_data: None,
-            reason_string: None,
-            user_properties: Vec::new(),
-        }
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 impl encode::EncodeLtd for Auth {
-    fn encoded_size(&self, limit: u32) -> usize {
-        const HEADER_LEN: usize = 1; // reason code
+    fn encoded_size(&self, limit: u32) -> usize { panic!("STUB: not implemented") }
 
-        let mut prop_len = encode::encoded_property_size(&self.auth_method)
-            + encode::encoded_property_size(&self.auth_data);
-        let diag_len = encode::encoded_size_opt_props(
-            &self.user_properties,
-            &self.reason_string,
-            encode::reduce_limit(limit, prop_len + HEADER_LEN + 4),
-        ); // exclude other props and max of 4 bytes for property length value
-        prop_len += diag_len;
-        HEADER_LEN + encode::var_int_len(prop_len) as usize + prop_len
-    }
-
-    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> {
-        let start_len = buf.len();
-        buf.put_u8(self.reason_code.into());
-
-        let prop_len = encode::var_int_len_from_size(size - 1);
-        utils::write_variable_length(prop_len, buf);
-        encode::encode_property(&self.auth_method, pt::AUTH_METHOD, buf)?;
-        encode::encode_property(&self.auth_data, pt::AUTH_DATA, buf)?;
-        encode::encode_opt_props(
-            &self.user_properties,
-            &self.reason_string,
-            buf,
-            size - (buf.len() - start_len) as u32,
-        )
-    }
+    fn encode(&self, buf: &mut BytePages, size: u32) -> Result<(), EncodeError> { panic!("STUB: not implemented") }
 }

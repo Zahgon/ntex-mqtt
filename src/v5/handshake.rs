@@ -3,7 +3,6 @@ use std::{fmt, num::NonZeroU16, rc::Rc};
 
 use super::{codec, shared::MqttShared, sink::MqttSink};
 
-/// Handshake message
 pub struct Handshake {
     io: IoBoxed,
     pkt: Box<codec::Connect>,
@@ -17,98 +16,41 @@ impl Handshake {
         size: u32,
         io: IoBoxed,
         shared: Rc<MqttShared>,
-    ) -> Self {
-        Self { io, pkt, size, shared }
-    }
+    ) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet(&self) -> &codec::Connect {
-        &self.pkt
-    }
+    pub fn packet(&self) -> &codec::Connect { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet_mut(&mut self) -> &mut codec::Connect {
-        &mut self.pkt
-    }
+    pub fn packet_mut(&mut self) -> &mut codec::Connect { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet_size(&self) -> u32 {
-        self.size
-    }
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn io(&self) -> &IoBoxed {
-        &self.io
-    }
+    pub fn io(&self) -> &IoBoxed { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Returns mqtt server sink
-    pub fn sink(&self) -> MqttSink {
-        MqttSink::new(self.shared.clone())
-    }
+    
+    pub fn sink(&self) -> MqttSink { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Ack handshake message and set state
-    pub fn ack<St>(self, st: St) -> HandshakeAck<St> {
-        let max_pkt_size = self.shared.codec.max_inbound_size();
-        let receive_max = self.shared.receive_max();
-        let packet = codec::ConnectAck {
-            reason_code: codec::ConnectAckReason::Success,
-            max_qos: self.shared.max_qos(),
-            topic_alias_max: self.shared.topic_alias_max(),
-            receive_max: NonZeroU16::new(receive_max).unwrap_or(crate::v5::RECEIVE_MAX_DEFAULT),
-            max_packet_size: if max_pkt_size == 0 {
-                None
-            } else {
-                Some(max_pkt_size)
-            },
-            ..codec::ConnectAck::default()
-        };
-
-        let Handshake { io, shared, pkt, .. } = self;
-        // [MQTT-3.1.2-22]
-        let keepalive = if pkt.keep_alive != 0 {
-            (pkt.keep_alive >> 1).saturating_add(pkt.keep_alive)
-        } else {
-            30
-        };
-        HandshakeAck { io, shared, keepalive, packet, session: Some(st), max_send: None }
-    }
+    
+    pub fn ack<St>(self, st: St) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Create handshake ack object with error
-    pub fn failed<St>(self, reason_code: codec::ConnectAckReason) -> HandshakeAck<St> {
-        HandshakeAck {
-            io: self.io,
-            shared: self.shared,
-            session: None,
-            keepalive: 30,
-            max_send: None,
-            packet: codec::ConnectAck { reason_code, ..codec::ConnectAck::default() },
-        }
-    }
+    
+    pub fn failed<St>(self, reason_code: codec::ConnectAckReason) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Create handshake ack object with provided `ConnectAck` packet
-    pub fn fail_with<St>(self, ack: codec::ConnectAck) -> HandshakeAck<St> {
-        HandshakeAck {
-            io: self.io,
-            shared: self.shared,
-            session: None,
-            packet: ack,
-            max_send: None,
-            keepalive: 30,
-        }
-    }
+    
+    pub fn fail_with<St>(self, ack: codec::ConnectAck) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 }
 
 impl fmt::Debug for Handshake {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.pkt.fmt(f)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
-/// Handshake ack message
 pub struct HandshakeAck<St> {
     pub(crate) io: IoBoxed,
     pub(crate) session: Option<St>,
@@ -119,53 +61,23 @@ pub struct HandshakeAck<St> {
 }
 
 impl<St> fmt::Debug for HandshakeAck<St> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HandshakeAck")
-            .field("packet", &self.packet)
-            .field("keepalive", &self.keepalive)
-            .field("max_send", &self.max_send)
-            .finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<St> HandshakeAck<St> {
     #[inline]
     #[must_use]
-    /// Set idle keep-alive for the connection in seconds.
-    /// This method sets `server_keepalive_sec` property for `ConnectAck`
-    /// response packet.
-    ///
-    /// By default idle keep-alive is set to 30 seconds.
-    ///
-    /// # Panics
-    ///
-    /// Panics if timeout is `0`.
-    pub fn keep_alive(mut self, timeout: u16) -> Self {
-        assert!(timeout != 0, "Timeout must be greater than 0");
-        self.keepalive = timeout;
-        self
-    }
+    
+    pub fn keep_alive(mut self, timeout: u16) -> Self { panic!("STUB: not implemented") }
 
     #[must_use]
-    /// Number of outgoing concurrent messages.
-    ///
-    /// By default outgoing is set to 16 messages
-    pub fn max_send(mut self, val: Option<u16>) -> Self {
-        if val == Some(0) {
-            self.max_send = None;
-        } else {
-            self.max_send = val;
-        }
-        self
-    }
+    
+    pub fn max_send(mut self, val: Option<u16>) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
     #[must_use]
-    /// Access to `ConnectAck` packet
-    pub fn with(mut self, f: impl FnOnce(&mut codec::ConnectAck)) -> Self {
-        f(&mut self.packet);
-        self
-    }
+    
+    pub fn with(mut self, f: impl FnOnce(&mut codec::ConnectAck)) -> Self { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]
@@ -186,11 +98,9 @@ mod tests {
         let connect = Box::new(codec::Connect::default());
         let h = Handshake::new(connect, 0, IoBoxed::from(io), shared);
 
-        // Handshake delegates to the Connect packet
         let dbg = format!("{h:?}");
         assert!(!dbg.is_empty());
 
-        // HandshakeAck
         let ack = h.ack(42u32);
         let dbg = format!("{ack:?}");
         assert!(dbg.contains("HandshakeAck"));

@@ -3,50 +3,10 @@ use ntex_bytes::{ByteString, Bytes};
 use super::{UserProperty, packet, packet::Packet};
 use crate::{error::DecodeError, types::packet_type, utils::Decode};
 
-pub(super) fn decode_packet(mut src: Bytes, first_byte: u8) -> Result<Packet, DecodeError> {
-    match first_byte {
-        packet_type::PUBACK => Ok(Packet::PublishAck(packet::PublishAck::decode(&mut src)?)),
-        packet_type::PINGREQ => Ok(Packet::PingRequest),
-        packet_type::PINGRESP => Ok(Packet::PingResponse),
-        packet_type::SUBSCRIBE => Ok(Packet::Subscribe(packet::Subscribe::decode(&mut src)?)),
-        packet_type::SUBACK => {
-            Ok(Packet::SubscribeAck(packet::SubscribeAck::decode(&mut src)?))
-        }
-        packet_type::UNSUBSCRIBE => {
-            Ok(Packet::Unsubscribe(packet::Unsubscribe::decode(&mut src)?))
-        }
-        packet_type::UNSUBACK => {
-            Ok(Packet::UnsubscribeAck(packet::UnsubscribeAck::decode(&mut src)?))
-        }
-        packet_type::CONNECT => {
-            Ok(Packet::Connect(Box::new(packet::Connect::decode(&mut src)?)))
-        }
-        packet_type::CONNACK => {
-            Ok(Packet::ConnectAck(Box::new(packet::ConnectAck::decode(&mut src)?)))
-        }
-        packet_type::DISCONNECT => {
-            Ok(Packet::Disconnect(packet::Disconnect::decode(&mut src)?))
-        }
-        packet_type::AUTH => Ok(Packet::Auth(packet::Auth::decode(&mut src)?)),
-        packet_type::PUBREC => {
-            Ok(Packet::PublishReceived(packet::PublishAck::decode(&mut src)?))
-        }
-        packet_type::PUBREL => {
-            Ok(Packet::PublishRelease(packet::PublishAck2::decode(&mut src)?))
-        }
-        packet_type::PUBCOMP => {
-            Ok(Packet::PublishComplete(packet::PublishAck2::decode(&mut src)?))
-        }
-        _ => Err(DecodeError::UnsupportedPacketType),
-    }
-}
+pub(super) fn decode_packet(mut src: Bytes, first_byte: u8) -> Result<Packet, DecodeError> { panic!("STUB: not implemented") }
 
 impl Decode for UserProperty {
-    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> {
-        let key = ByteString::decode(src)?;
-        let val = ByteString::decode(src)?;
-        Ok((key, val))
-    }
+    fn decode(src: &mut Bytes) -> Result<Self, DecodeError> { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]
@@ -226,11 +186,7 @@ mod tests {
 
     #[test]
     fn test_decode_publish_packets() {
-        //assert_eq!(
-        //    decode_publish_packet(b"\x00\x05topic\x12\x34"),
-        //    Done(&b""[..], ("topic".to_owned(), 0x1234))
-        //);
-
+        
         assert_decode_publish(
             b"\x3d\x0E\x00\x05topic\x43\x21\x00data",
             &Publish {

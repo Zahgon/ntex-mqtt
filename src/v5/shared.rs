@@ -12,17 +12,17 @@ use crate::{QoS, error, error::SendPacketError, payload::PlSender, types::packet
 bitflags::bitflags! {
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub(crate) struct Flags: u8 {
-        const WRB_ENABLED     = 0b0000_0001; // write-backpressure
-        const ON_PUBLISH_ACK  = 0b0000_0010; // on-publish-ack callback
+        const WRB_ENABLED     = 0b0000_0001; 
+        const ON_PUBLISH_ACK  = 0b0000_0010; 
 
-        const QOS_ATLEAST     = 0b0000_0100; // AtLeastOnce
-        const QOS_EXACTLY     = 0b0000_1000; // ExactlyOnce
+        const QOS_ATLEAST     = 0b0000_0100; 
+        const QOS_EXACTLY     = 0b0000_1000; 
 
-        const ZERO_SES_EXPIRY = 0b0001_0000; // Session expiry is zero in Connect
+        const ZERO_SES_EXPIRY = 0b0001_0000; 
 
-        const DISCONNECT      = 0b0010_0000; // Disconnect frame is sent
-        const DISCONNECT_RECV = 0b0100_0000; // Disconnect frame is received
-        const STOPPED         = 0b1000_0000; // DispatchItem::Stop() is sent
+        const DISCONNECT      = 0b0010_0000; 
+        const DISCONNECT_RECV = 0b0100_0000; 
+        const STOPPED         = 0b1000_0000; 
     }
 }
 
@@ -44,9 +44,7 @@ pub struct MqttShared {
 }
 
 impl fmt::Debug for MqttShared {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MqttShared").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 #[derive(Debug)]
@@ -63,461 +61,108 @@ pub(super) struct MqttSinkPool {
 }
 
 impl Default for MqttSinkPool {
-    fn default() -> Self {
-        Self { queue: pool::new(), waiters: pool::new() }
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 impl MqttShared {
-    pub(super) fn new(io: IoRef, codec: codec::Codec, pool: Rc<MqttSinkPool>) -> Self {
-        Self {
-            io,
-            pool,
-            codec,
-            cap: Cell::new(0),
-            queues: RefCell::new(MqttSharedQueues {
-                inflight: VecDeque::with_capacity(8),
-                inflight_ids: HashSet::default(),
-                waiters: VecDeque::new(),
-                rx: None,
-            }),
-            receive_max: Cell::new(0),
-            topic_alias_max: Cell::new(0),
-            inflight_idx: Cell::new(0),
-            flags: Cell::new(Flags::QOS_ATLEAST),
-            payload: Cell::new(None),
-            on_publish_ack: Cell::new(None),
-            encode_error: Cell::new(None),
-            streaming_waiter: Cell::new(None),
-            streaming_remaining: Cell::new(None),
-        }
-    }
+    pub(super) fn new(io: IoRef, codec: codec::Codec, pool: Rc<MqttSinkPool>) -> Self { panic!("STUB: not implemented") }
 
-    pub(super) fn tag(&self) -> &'static str {
-        self.io.tag()
-    }
+    pub(super) fn tag(&self) -> &'static str { panic!("STUB: not implemented") }
 
-    pub(super) fn credit(&self) -> usize {
-        self.cap.get().saturating_sub(self.queues.borrow().inflight.len())
-    }
+    pub(super) fn credit(&self) -> usize { panic!("STUB: not implemented") }
 
-    pub(super) fn receive_max(&self) -> u16 {
-        self.receive_max.get()
-    }
+    pub(super) fn receive_max(&self) -> u16 { panic!("STUB: not implemented") }
 
-    pub(super) fn topic_alias_max(&self) -> u16 {
-        self.topic_alias_max.get()
-    }
+    pub(super) fn topic_alias_max(&self) -> u16 { panic!("STUB: not implemented") }
 
-    pub(super) fn max_qos(&self) -> QoS {
-        let flags = self.flags.get();
-        if flags.contains(Flags::QOS_ATLEAST) {
-            QoS::AtLeastOnce
-        } else if flags.contains(Flags::QOS_EXACTLY) {
-            QoS::ExactlyOnce
-        } else {
-            QoS::AtMostOnce
-        }
-    }
+    pub(super) fn max_qos(&self) -> QoS { panic!("STUB: not implemented") }
 
-    pub(super) fn set_receive_max(&self, val: u16) {
-        self.receive_max.set(val);
-    }
+    pub(super) fn set_receive_max(&self, val: u16) { panic!("STUB: not implemented") }
 
-    pub(super) fn set_topic_alias_max(&self, val: u16) {
-        self.topic_alias_max.set(val);
-    }
+    pub(super) fn set_topic_alias_max(&self, val: u16) { panic!("STUB: not implemented") }
 
-    pub(super) fn set_max_qos(&self, val: QoS) {
-        let mut flags = self.flags.get();
-        match val {
-            QoS::AtLeastOnce => {
-                flags.insert(Flags::QOS_ATLEAST);
-                flags.remove(Flags::QOS_EXACTLY);
-            }
-            QoS::ExactlyOnce => {
-                flags.insert(Flags::QOS_EXACTLY);
-                flags.remove(Flags::QOS_ATLEAST);
-            }
-            QoS::AtMostOnce => {
-                flags.remove(Flags::QOS_ATLEAST);
-                flags.remove(Flags::QOS_EXACTLY);
-            }
-        }
-        self.flags.set(flags);
-    }
+    pub(super) fn set_max_qos(&self, val: QoS) { panic!("STUB: not implemented") }
 
-    pub(super) fn is_zero_session_expiry(&self) -> bool {
-        self.flags.get().contains(Flags::ZERO_SES_EXPIRY)
-    }
+    pub(super) fn is_zero_session_expiry(&self) -> bool { panic!("STUB: not implemented") }
 
-    pub(super) fn set_zero_session_expiry(&self) {
-        let mut flags = self.flags.get();
-        flags.insert(Flags::ZERO_SES_EXPIRY);
-        self.flags.set(flags);
-    }
+    pub(super) fn set_zero_session_expiry(&self) { panic!("STUB: not implemented") }
 
-    pub(super) fn close(&self, pkt: Option<codec::Disconnect>) {
-        if !self.is_closed() {
-            if let Some(pkt) = pkt
-                && !self.is_disconnect_sent()
-            {
-                let _ = self.io.encode(Encoded::Packet(Packet::Disconnect(pkt)), &self.codec);
-            }
-            self.io.close();
-        }
-        self.clear_queues();
-    }
+    pub(super) fn close(&self, pkt: Option<codec::Disconnect>) { panic!("STUB: not implemented") }
 
-    pub(super) fn force_close(&self) {
-        self.io.terminate();
-        self.clear_queues();
-    }
+    pub(super) fn force_close(&self) { panic!("STUB: not implemented") }
 
-    pub(super) fn streaming_dropped(&self) {
-        self.force_close();
-        self.encode_error.set(Some(error::EncodeError::PublishIncomplete));
-    }
+    pub(super) fn streaming_dropped(&self) { panic!("STUB: not implemented") }
 
-    pub(super) fn is_closed(&self) -> bool {
-        self.io.is_closed()
-    }
+    pub(super) fn is_closed(&self) -> bool { panic!("STUB: not implemented") }
 
-    pub(super) fn is_streaming(&self) -> bool {
-        self.streaming_remaining.get().is_some()
-    }
+    pub(super) fn is_streaming(&self) -> bool { panic!("STUB: not implemented") }
 
-    pub(super) fn is_ready(&self) -> bool {
-        self.credit() > 0 && !self.flags.get().contains(Flags::WRB_ENABLED)
-    }
+    pub(super) fn is_ready(&self) -> bool { panic!("STUB: not implemented") }
 
-    pub(super) fn is_disconnect_sent(&self) -> bool {
-        let mut flags = self.flags.get();
-        let disconnect = flags.contains(Flags::DISCONNECT);
-        if !disconnect {
-            flags.insert(Flags::DISCONNECT);
-            self.flags.set(flags);
-        }
-        disconnect
-    }
+    pub(super) fn is_disconnect_sent(&self) -> bool { panic!("STUB: not implemented") }
 
-    pub(super) fn set_disconnect_recv(&self) {
-        let mut flags = self.flags.get();
-        flags.insert(Flags::DISCONNECT_RECV);
-        self.flags.set(flags);
-    }
+    pub(super) fn set_disconnect_recv(&self) { panic!("STUB: not implemented") }
 
-    pub(super) fn is_disconnect_recv(&self) -> bool {
-        self.flags.get().contains(Flags::DISCONNECT_RECV)
-    }
+    pub(super) fn is_disconnect_recv(&self) -> bool { panic!("STUB: not implemented") }
 
-    /// publish packet id
-    pub(super) fn set_publish_id(&self, pkt: &mut Publish) -> num::NonZeroU16 {
-        if let Some(idx) = pkt.packet_id {
-            idx
-        } else {
-            let idx = self.next_id();
-            pkt.packet_id = Some(idx);
-            idx
-        }
-    }
+    pub(super) fn set_publish_id(&self, pkt: &mut Publish) -> num::NonZeroU16 { panic!("STUB: not implemented") }
 
-    pub(super) fn next_id(&self) -> num::NonZeroU16 {
-        let idx = self.inflight_idx.get() + 1;
-        self.inflight_idx.set(idx);
-        let idx = if idx == u16::MAX {
-            self.inflight_idx.set(0);
-            u16::MAX
-        } else {
-            self.inflight_idx.set(idx);
-            idx
-        };
-        num::NonZeroU16::new(idx).unwrap()
-    }
+    pub(super) fn next_id(&self) -> num::NonZeroU16 { panic!("STUB: not implemented") }
 
-    pub(super) fn set_cap(&self, cap: usize) {
-        let mut queues = self.queues.borrow_mut();
+    pub(super) fn set_cap(&self, cap: usize) { panic!("STUB: not implemented") }
 
-        // wake up queued request (receive max limit)
-        'outer: for _ in 0..cap {
-            while let Some(tx) = queues.waiters.pop_front() {
-                if tx.send(()).is_ok() {
-                    continue 'outer;
-                }
-            }
-            break;
-        }
-        self.cap.set(cap);
-    }
+    pub(super) fn set_publish_ack(&self, f: Box<dyn Fn(codec::PublishAck, bool)>) { panic!("STUB: not implemented") }
 
-    pub(super) fn set_publish_ack(&self, f: Box<dyn Fn(codec::PublishAck, bool)>) {
-        let mut flags = self.flags.get();
-        flags.insert(Flags::ON_PUBLISH_ACK);
-        self.flags.set(flags);
-        self.on_publish_ack.set(Some(f));
-    }
-
-    /// Close mqtt connection, dont send disconnect message
-    pub(super) fn drop_sink(&self, io: bool) {
-        self.clear_queues();
-        if io {
-            self.io.close();
-        }
-    }
+    pub(super) fn drop_sink(&self, io: bool) { panic!("STUB: not implemented") }
 
     pub(super) fn drop_payload<E>(&self, err: &E)
     where
         E: Clone,
         error::PayloadError: From<E>,
-    {
-        if let Some(pl) = self.payload.take() {
-            pl.set_error(err.clone().into());
-        }
-    }
+    { panic!("STUB: not implemented") }
 
-    fn clear_queues(&self) {
-        let mut queues = self.queues.borrow_mut();
-        queues.waiters.clear();
+    fn clear_queues(&self) { panic!("STUB: not implemented") }
 
-        if let Some(cb) = self.on_publish_ack.take() {
-            for (idx, tx, _) in queues.inflight.drain(..) {
-                if tx.is_none() {
-                    (*cb)(codec::PublishAck { packet_id: idx, ..Default::default() }, true);
-                }
-            }
-        } else {
-            queues.inflight.clear();
-        }
-    }
+    pub(super) fn enable_wr_backpressure(&self) { panic!("STUB: not implemented") }
 
-    pub(super) fn enable_wr_backpressure(&self) {
-        let mut flags = self.flags.get();
-        flags.insert(Flags::WRB_ENABLED);
-        self.flags.set(flags);
-    }
+    pub(super) fn disable_wr_backpressure(&self) { panic!("STUB: not implemented") }
 
-    pub(super) fn disable_wr_backpressure(&self) {
-        let mut flags = self.flags.get();
-        flags.remove(Flags::WRB_ENABLED);
-        self.flags.set(flags);
+    pub(super) async fn want_payload_stream(&self) -> Result<(), SendPacketError> { panic!("STUB: not implemented") }
 
-        // streaming waiter
-        if let Some(tx) = self.streaming_waiter.take()
-            && tx.send(()).is_ok()
-        {
-            return;
-        }
+    fn check_streaming(&self) -> Result<(), error::EncodeError> { panic!("STUB: not implemented") }
 
-        // check if there are waiters
-        let mut queues = self.queues.borrow_mut();
-        if queues.inflight.len() < self.cap.get() {
-            let mut num = self.cap.get() - queues.inflight.len();
-            while num > 0 {
-                if let Some(tx) = queues.waiters.pop_front() {
-                    if tx.send(()).is_ok() {
-                        num -= 1;
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-    }
+    fn enable_streaming(&self, pkt: &Publish, payload: Option<&Bytes>) { panic!("STUB: not implemented") }
 
-    pub(super) async fn want_payload_stream(&self) -> Result<(), SendPacketError> {
-        if self.is_closed() {
-            Err(SendPacketError::Disconnected)
-        } else if self.flags.get().contains(Flags::WRB_ENABLED) {
-            let (tx, rx) = self.pool.waiters.channel();
-            self.streaming_waiter.set(Some(tx));
-            if rx.await.is_ok() {
-                Ok(())
-            } else {
-                Err(SendPacketError::Disconnected)
-            }
-        } else {
-            Ok(())
-        }
-    }
-
-    fn check_streaming(&self) -> Result<(), error::EncodeError> {
-        if self.streaming_remaining.get().is_some() {
-            Err(error::EncodeError::ExpectPayload)
-        } else {
-            Ok(())
-        }
-    }
-
-    fn enable_streaming(&self, pkt: &Publish, payload: Option<&Bytes>) {
-        let len = payload.map_or(0, Bytes::len);
-        self.streaming_remaining.set(num::NonZeroU32::new(pkt.payload_size - len as u32));
-    }
-
-    pub(super) fn encode_packet(&self, pkt: codec::Packet) -> Result<(), error::EncodeError> {
-        self.check_streaming()?;
-        self.io.encode(Encoded::Packet(pkt), &self.codec)
-    }
+    pub(super) fn encode_packet(&self, pkt: codec::Packet) -> Result<(), error::EncodeError> { panic!("STUB: not implemented") }
 
     pub(super) fn encode_publish(
         &self,
         pkt: Publish,
         payload: Option<Bytes>,
-    ) -> Result<(), error::EncodeError> {
-        self.check_streaming()?;
-        self.enable_streaming(&pkt, payload.as_ref());
-        self.io.encode(Encoded::Publish(pkt, payload), &self.codec)
-    }
+    ) -> Result<(), error::EncodeError> { panic!("STUB: not implemented") }
 
     pub(super) fn encode_publish_payload(
         &self,
         payload: Bytes,
-    ) -> Result<bool, error::EncodeError> {
-        if let Some(remaining) = self.streaming_remaining.get() {
-            let len = payload.len() as u32;
-            if len > remaining.get() {
-                self.force_close();
-                Err(error::EncodeError::OverPublishSize)
-            } else {
-                self.io.encode(Encoded::PayloadChunk(payload), &self.codec)?;
-                self.streaming_remaining.set(num::NonZeroU32::new(remaining.get() - len));
-                Ok(self.streaming_remaining.get().is_some())
-            }
-        } else {
-            Err(error::EncodeError::UnexpectedPayload)
-        }
-    }
+    ) -> Result<bool, error::EncodeError> { panic!("STUB: not implemented") }
 
-    pub(super) fn pkt_ack(&self, ack: Ack) -> Result<(), error::ProtocolError> {
-        self.pkt_ack_inner(ack).inspect_err(|_| {
-            self.close(Some(codec::Disconnect {
-                reason_code: codec::DisconnectReasonCode::ImplementationSpecificError,
-                ..Default::default()
-            }));
-        })
-    }
+    pub(super) fn pkt_ack(&self, ack: Ack) -> Result<(), error::ProtocolError> { panic!("STUB: not implemented") }
 
-    fn pkt_ack_inner(&self, pkt: Ack) -> Result<(), error::ProtocolError> {
-        let mut queues = self.queues.borrow_mut();
+    fn pkt_ack_inner(&self, pkt: Ack) -> Result<(), error::ProtocolError> { panic!("STUB: not implemented") }
 
-        // check ack order
-        if let Some((idx, tx, tp)) = queues.inflight.pop_front() {
-            if idx != pkt.packet_id() {
-                log::trace!(
-                    "MQTT protocol error, packet_id order does not match, expected {}, got: {}",
-                    idx,
-                    pkt.packet_id()
-                );
-                Err(error::ProtocolError::packet_id_mismatch())
-            } else if matches!(pkt, Ack::Receive(_)) {
-                // get publish ack channel
-                log::trace!("Ack packet receive with id: {}", pkt.packet_id());
-
-                if let Some(tx) = tx {
-                    let _ = tx.send(pkt);
-                }
-                let (tx, rx) = self.pool.queue.channel();
-                queues.rx = Some(rx);
-                queues.inflight.push_back((idx, Some(tx), AckType::Complete));
-                Ok(())
-            } else if matches!(pkt, Ack::Complete(_)) {
-                // get publish ack channel
-                log::trace!("Ack packet complete with id: {}", pkt.packet_id());
-                queues.inflight_ids.remove(&pkt.packet_id());
-                queues.rx.take();
-
-                if let Some(tx) = tx {
-                    let _ = tx.send(pkt);
-                }
-
-                // wake up queued request (receive max limit)
-                while let Some(tx) = queues.waiters.pop_front() {
-                    if tx.send(()).is_ok() {
-                        break;
-                    }
-                }
-                Ok(())
-            } else {
-                // get publish ack channel
-                log::trace!("Ack packet with id: {}", pkt.packet_id());
-
-                // cleanup ack queue
-                queues.inflight_ids.remove(&pkt.packet_id());
-
-                if pkt.is_match(tp) {
-                    if let Some(tx) = tx {
-                        let _ = tx.send(pkt);
-                    } else {
-                        let cb = self.on_publish_ack.take().unwrap();
-                        (*cb)(pkt.publish(), false);
-                        self.on_publish_ack.set(Some(cb));
-                    }
-
-                    // wake up queued request (receive max limit)
-                    while let Some(tx) = queues.waiters.pop_front() {
-                        if tx.send(()).is_ok() {
-                            break;
-                        }
-                    }
-                    Ok(())
-                } else {
-                    log::trace!("MQTT protocol error, unexpeted packet");
-                    Err(error::ProtocolError::unexpected_packet(
-                        pkt.packet_type(),
-                        tp.expected_str(),
-                    ))
-                }
-            }
-        } else {
-            log::trace!("Unexpected PublishAck packet");
-            Err(error::ProtocolError::generic_violation(
-                "Received PUBACK packet while there are no unacknowledged PUBLISH packets",
-            ))
-        }
-    }
-
-    /// Register ack in response channel
     pub(super) fn wait_response(
         &self,
         id: num::NonZeroU16,
         ack: AckType,
-    ) -> Result<pool::Receiver<Ack>, SendPacketError> {
-        let mut queues = self.queues.borrow_mut();
-        if queues.inflight_ids.contains(&id) {
-            Err(SendPacketError::PacketIdInUse(id))
-        } else {
-            let (tx, rx) = self.pool.queue.channel();
-            queues.inflight.push_back((id, Some(tx), ack));
-            queues.inflight_ids.insert(id);
-            Ok(rx)
-        }
-    }
+    ) -> Result<pool::Receiver<Ack>, SendPacketError> { panic!("STUB: not implemented") }
 
-    /// Register ack in response channel
     pub(super) fn wait_publish_response(
         &self,
         id: num::NonZeroU16,
         ack: AckType,
         pkt: Publish,
         payload: Option<Bytes>,
-    ) -> Result<pool::Receiver<Ack>, SendPacketError> {
-        self.check_streaming()?;
-        self.enable_streaming(&pkt, payload.as_ref());
-
-        let mut queues = self.queues.borrow_mut();
-        if queues.inflight_ids.contains(&id) {
-            Err(SendPacketError::PacketIdInUse(id))
-        } else {
-            match self.io.encode(Encoded::Publish(pkt, payload), &self.codec) {
-                Ok(()) => {
-                    let (tx, rx) = self.pool.queue.channel();
-                    queues.inflight.push_back((id, Some(tx), ack));
-                    queues.inflight_ids.insert(id);
-                    Ok(rx)
-                }
-                Err(e) => Err(SendPacketError::Encode(e)),
-            }
-        }
-    }
+    ) -> Result<pool::Receiver<Ack>, SendPacketError> { panic!("STUB: not implemented") }
 
     pub(super) fn wait_publish_response_no_block(
         &self,
@@ -525,53 +170,14 @@ impl MqttShared {
         ack: AckType,
         pkt: Publish,
         payload: Option<Bytes>,
-    ) -> Result<(), SendPacketError> {
-        self.check_streaming()?;
-        self.enable_streaming(&pkt, payload.as_ref());
+    ) -> Result<(), SendPacketError> { panic!("STUB: not implemented") }
 
-        let mut queues = self.queues.borrow_mut();
-        if queues.inflight_ids.contains(&id) {
-            Err(SendPacketError::PacketIdInUse(id))
-        } else {
-            match self.io.encode(Encoded::Publish(pkt, payload), &self.codec) {
-                Ok(()) => {
-                    queues.inflight.push_back((id, None, ack));
-                    queues.inflight_ids.insert(id);
-                    Ok(())
-                }
-                Err(e) => Err(SendPacketError::Encode(e)),
-            }
-        }
-    }
+    pub(super) fn wait_readiness(&self) -> Option<pool::Receiver<()>> { panic!("STUB: not implemented") }
 
-    pub(super) fn wait_readiness(&self) -> Option<pool::Receiver<()>> {
-        let mut queues = self.queues.borrow_mut();
-
-        if queues.inflight.len() >= self.cap.get()
-            || self.flags.get().contains(Flags::WRB_ENABLED)
-        {
-            let (tx, rx) = self.pool.waiters.channel();
-            queues.waiters.push_back(tx);
-            Some(rx)
-        } else {
-            None
-        }
-    }
-
-    /// Register ack in response channel
     pub(super) fn release_publish(
         &self,
         pkt: codec::PublishAck2,
-    ) -> Result<pool::Receiver<Ack>, SendPacketError> {
-        let Some(rx) = self.queues.borrow_mut().rx.take() else {
-            return Err(SendPacketError::UnexpectedRelease);
-        };
-
-        match self.io.encode(Encoded::Packet(codec::Packet::PublishRelease(pkt)), &self.codec) {
-            Ok(()) => Ok(rx),
-            Err(e) => Err(SendPacketError::Encode(e)),
-        }
-    }
+    ) -> Result<pool::Receiver<Ack>, SendPacketError> { panic!("STUB: not implemented") }
 }
 
 impl Encoder for MqttShared {
@@ -579,9 +185,7 @@ impl Encoder for MqttShared {
     type Error = error::EncodeError;
 
     #[inline]
-    fn encodev(&self, item: Self::Item, dst: &mut BytePages) -> Result<(), Self::Error> {
-        self.codec.encodev(item, dst)
-    }
+    fn encodev(&self, item: Self::Item, dst: &mut BytePages) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 }
 
 impl Decoder for MqttShared {
@@ -589,9 +193,7 @@ impl Decoder for MqttShared {
     type Error = error::DecodeError;
 
     #[inline]
-    fn decode(&self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        self.codec.decode(src)
-    }
+    fn decode(&self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> { panic!("STUB: not implemented") }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -613,77 +215,21 @@ pub(super) enum Ack {
 }
 
 impl Ack {
-    pub(super) fn packet_type(&self) -> u8 {
-        match self {
-            Ack::Publish(_) => packet_type::PUBACK,
-            Ack::Receive(_) => packet_type::PUBREC,
-            Ack::Complete(_) => packet_type::PUBCOMP,
-            Ack::Subscribe(_) => packet_type::SUBACK,
-            Ack::Unsubscribe(_) => packet_type::UNSUBACK,
-        }
-    }
+    pub(super) fn packet_type(&self) -> u8 { panic!("STUB: not implemented") }
 
-    pub(super) fn packet_id(&self) -> num::NonZeroU16 {
-        match self {
-            Ack::Publish(pkt) | Ack::Receive(pkt) => pkt.packet_id,
-            Ack::Complete(pkt) => pkt.packet_id,
-            Ack::Subscribe(pkt) => pkt.packet_id,
-            Ack::Unsubscribe(pkt) => pkt.packet_id,
-        }
-    }
+    pub(super) fn packet_id(&self) -> num::NonZeroU16 { panic!("STUB: not implemented") }
 
-    pub(super) fn publish(self) -> codec::PublishAck {
-        if let Ack::Publish(pkt) = self {
-            pkt
-        } else {
-            panic!()
-        }
-    }
+    pub(super) fn publish(self) -> codec::PublishAck { panic!("STUB: not implemented") }
 
-    pub(super) fn receive(self) -> codec::PublishAck {
-        if let Ack::Receive(pkt) = self {
-            pkt
-        } else {
-            panic!()
-        }
-    }
+    pub(super) fn receive(self) -> codec::PublishAck { panic!("STUB: not implemented") }
 
-    pub(super) fn subscribe(self) -> codec::SubscribeAck {
-        if let Ack::Subscribe(pkt) = self {
-            pkt
-        } else {
-            panic!()
-        }
-    }
+    pub(super) fn subscribe(self) -> codec::SubscribeAck { panic!("STUB: not implemented") }
 
-    pub(super) fn unsubscribe(self) -> codec::UnsubscribeAck {
-        if let Ack::Unsubscribe(pkt) = self {
-            pkt
-        } else {
-            panic!()
-        }
-    }
+    pub(super) fn unsubscribe(self) -> codec::UnsubscribeAck { panic!("STUB: not implemented") }
 
-    pub(super) fn is_match(&self, tp: AckType) -> bool {
-        match (self, tp) {
-            (Ack::Publish(_), AckType::Publish)
-            | (Ack::Receive(_), AckType::Receive)
-            | (Ack::Complete(_), AckType::Complete)
-            | (Ack::Subscribe(_), AckType::Subscribe)
-            | (Ack::Unsubscribe(_), AckType::Unsubscribe) => true,
-            (_, _) => false,
-        }
-    }
+    pub(super) fn is_match(&self, tp: AckType) -> bool { panic!("STUB: not implemented") }
 }
 
 impl AckType {
-    pub(super) fn expected_str(self) -> &'static str {
-        match self {
-            AckType::Publish => "Expected PUBACK packet",
-            AckType::Receive => "Expected PUBREC packet",
-            AckType::Complete => "Expected PUBCOMP packet",
-            AckType::Subscribe => "Expected SUBACK packet",
-            AckType::Unsubscribe => "Expected UNSUBACK packet",
-        }
-    }
+    pub(super) fn expected_str(self) -> &'static str { panic!("STUB: not implemented") }
 }

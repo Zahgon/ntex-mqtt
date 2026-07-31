@@ -1,10 +1,9 @@
-//! Service that limits number of in-flight async requests.
+
 use std::{cell::Cell, fmt, future::poll_fn, rc::Rc, task::Context, task::Poll};
 
 use ntex_service::{Service, ServiceCtx};
 use ntex_util::{future::join, task::LocalWaker};
 
-/// Trait for types that could be sized
 pub trait SizedRequest {
     fn size(&self) -> u32;
 
@@ -20,19 +19,11 @@ pub struct InFlightServiceImpl<S> {
 }
 
 impl<S> fmt::Debug for InFlightServiceImpl<S> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("InFlightServiceImpl").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<S> InFlightServiceImpl<S> {
-    pub fn new(max_cap: u16, max_size: usize, service: S) -> Self {
-        InFlightServiceImpl {
-            service,
-            publish: Cell::new(false),
-            count: Counter::new(max_cap, max_size),
-        }
-    }
+    pub fn new(max_cap: u16, max_size: usize, service: S) -> Self { panic!("STUB: not implemented") }
 }
 
 impl<S, R> Service<R> for InFlightServiceImpl<S>
@@ -44,30 +35,10 @@ where
     type Error = S::Error;
 
     #[inline]
-    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), S::Error> {
-        if self.publish.get() || self.count.is_available() {
-            ctx.ready(&self.service).await
-        } else {
-            join(self.count.available(), ctx.ready(&self.service)).await.1
-        }
-    }
+    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), S::Error> { panic!("STUB: not implemented") }
 
     #[inline]
-    async fn call(&self, req: R, ctx: ServiceCtx<'_, Self>) -> Result<S::Response, S::Error> {
-        // process payload chunks
-        if self.publish.get() && !req.is_chunk() {
-            self.publish.set(false);
-        }
-        if req.is_publish() {
-            self.publish.set(true);
-        }
-
-        let size = if self.count.0.max_size > 0 { req.size() } else { 0 };
-        let task_guard = self.count.get(size);
-        let result = ctx.call(&self.service, req).await;
-        drop(task_guard);
-        result
-    }
+    async fn call(&self, req: R, ctx: ServiceCtx<'_, Self>) -> Result<S::Response, S::Error> { panic!("STUB: not implemented") }
 
     ntex_service::forward_poll!(service);
     ntex_service::forward_shutdown!(service);
@@ -84,84 +55,33 @@ struct CounterInner {
 }
 
 impl Counter {
-    fn new(max_cap: u16, max_size: usize) -> Self {
-        Counter(Rc::new(CounterInner {
-            max_cap,
-            max_size,
-            cur_cap: Cell::new(0),
-            cur_size: Cell::new(0),
-            task: LocalWaker::new(),
-        }))
-    }
+    fn new(max_cap: u16, max_size: usize) -> Self { panic!("STUB: not implemented") }
 
-    fn get(&self, size: u32) -> CounterGuard {
-        CounterGuard::new(size, self.0.clone())
-    }
+    fn get(&self, size: u32) -> CounterGuard { panic!("STUB: not implemented") }
 
-    fn is_available(&self) -> bool {
-        (self.0.max_cap == 0 || self.0.cur_cap.get() < self.0.max_cap)
-            && (self.0.max_size == 0 || self.0.cur_size.get() <= self.0.max_size)
-    }
+    fn is_available(&self) -> bool { panic!("STUB: not implemented") }
 
-    async fn available(&self) {
-        poll_fn(|cx| {
-            if self.0.available(cx) {
-                Poll::Ready(())
-            } else {
-                Poll::Pending
-            }
-        })
-        .await;
-    }
+    async fn available(&self) { panic!("STUB: not implemented") }
 }
 
 struct CounterGuard(u32, Rc<CounterInner>);
 
 impl CounterGuard {
-    fn new(size: u32, inner: Rc<CounterInner>) -> Self {
-        inner.inc(size);
-        CounterGuard(size, inner)
-    }
+    fn new(size: u32, inner: Rc<CounterInner>) -> Self { panic!("STUB: not implemented") }
 }
 
 impl Unpin for CounterGuard {}
 
 impl Drop for CounterGuard {
-    fn drop(&mut self) {
-        self.1.dec(self.0);
-    }
+    fn drop(&mut self) { panic!("STUB: not implemented") }
 }
 
 impl CounterInner {
-    fn inc(&self, size: u32) {
-        let cur_cap = self.cur_cap.get() + 1;
-        self.cur_cap.set(cur_cap);
-        let cur_size = self.cur_size.get() + size as usize;
-        self.cur_size.set(cur_size);
+    fn inc(&self, size: u32) { panic!("STUB: not implemented") }
 
-        if cur_cap == self.max_cap || cur_size >= self.max_size {
-            self.task.wake();
-        }
-    }
+    fn dec(&self, size: u32) { panic!("STUB: not implemented") }
 
-    fn dec(&self, size: u32) {
-        let num = self.cur_cap.get();
-        self.cur_cap.set(num - 1);
-
-        let cur_size = self.cur_size.get();
-        let new_size = cur_size - (size as usize);
-        self.cur_size.set(new_size);
-
-        if num == self.max_cap || (cur_size > self.max_size && new_size <= self.max_size) {
-            self.task.wake();
-        }
-    }
-
-    fn available(&self, cx: &Context<'_>) -> bool {
-        self.task.register(cx.waker());
-        (self.max_cap == 0 || self.cur_cap.get() < self.max_cap)
-            && (self.max_size == 0 || self.cur_size.get() <= self.max_size)
-    }
+    fn available(&self, cx: &Context<'_>) -> bool { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]
@@ -271,9 +191,6 @@ mod tests {
         }
     }
 
-    /// `InflightService::poll_ready()` must always register waker,
-    /// otherwise it can lose wake up if inner service's `poll_ready()`
-    /// does not wakes dispatcher.
     #[ntex::test]
     async fn test_inflight3() {
         let wait_time = Duration::from_millis(50);

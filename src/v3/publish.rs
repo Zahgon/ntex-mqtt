@@ -6,7 +6,7 @@ use ntex_router::Path;
 use crate::{error::PayloadError, payload::Payload, v3::codec};
 
 #[derive(Debug)]
-/// Publish message
+
 pub struct Publish {
     pkt: codec::Publish,
     pkt_size: u32,
@@ -15,92 +15,57 @@ pub struct Publish {
 }
 
 impl Publish {
-    /// Create a new `Publish` message from a PUBLISH
-    /// packet
-    #[doc(hidden)]
-    pub fn new(pkt: codec::Publish, payload: Payload, pkt_size: u32) -> Self {
-        Self { topic: Path::new(pkt.topic.clone()), pkt, pkt_size, payload }
-    }
+    
+    pub fn new(pkt: codec::Publish, payload: Payload, pkt_size: u32) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
-    /// this might be re-delivery of an earlier attempt to send the Packet.
-    pub fn dup(&self) -> bool {
-        self.pkt.dup
-    }
+    
+    pub fn dup(&self) -> bool { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn retain(&self) -> bool {
-        self.pkt.retain
-    }
+    pub fn retain(&self) -> bool { panic!("STUB: not implemented") }
 
     #[inline]
-    /// the level of assurance for delivery of an Application Message.
-    pub fn qos(&self) -> codec::QoS {
-        self.pkt.qos
-    }
+    
+    pub fn qos(&self) -> codec::QoS { panic!("STUB: not implemented") }
 
     #[inline]
-    /// the information channel to which payload data is published.
-    pub fn publish_topic(&self) -> &str {
-        &self.pkt.topic
-    }
+    
+    pub fn publish_topic(&self) -> &str { panic!("STUB: not implemented") }
 
     #[inline]
-    /// only present in PUBLISH Packets where the `QoS` level is 1 or 2.
-    pub fn id(&self) -> Option<NonZeroU16> {
-        self.pkt.packet_id
-    }
+    
+    pub fn id(&self) -> Option<NonZeroU16> { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn topic(&self) -> &Path<ByteString> {
-        &self.topic
-    }
+    pub fn topic(&self) -> &Path<ByteString> { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn topic_mut(&mut self) -> &mut Path<ByteString> {
-        &mut self.topic
-    }
+    pub fn topic_mut(&mut self) -> &mut Path<ByteString> { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet(&self) -> &codec::Publish {
-        &self.pkt
-    }
+    pub fn packet(&self) -> &codec::Publish { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet_mut(&mut self) -> &mut codec::Publish {
-        &mut self.pkt
-    }
+    pub fn packet_mut(&mut self) -> &mut codec::Publish { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Returns size of the publish
-    pub fn packet_size(&self) -> u32 {
-        self.pkt_size
-    }
+    
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Returns size of the payload
-    pub fn payload_size(&self) -> usize {
-        self.pkt.payload_size as usize
-    }
+    
+    pub fn payload_size(&self) -> usize { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Read next chunk of the published payload.
-    pub async fn read(&self) -> Result<Option<Bytes>, PayloadError> {
-        self.payload.read().await
-    }
+    
+    pub async fn read(&self) -> Result<Option<Bytes>, PayloadError> { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Read complete payload.
-    pub async fn read_all(&self) -> Result<Bytes, PayloadError> {
-        self.payload.read_all().await
-    }
+    
+    pub async fn read_all(&self) -> Result<Bytes, PayloadError> { panic!("STUB: not implemented") }
 
-    /// Replace packet'a payload with empty bytes, returns existing payload.
-    pub fn take_payload(&mut self) -> Payload {
-        mem::take(&mut self.payload)
-    }
+    pub fn take_payload(&mut self) -> Payload { panic!("STUB: not implemented") }
 
-    pub(super) fn into_inner(self) -> (codec::Publish, Payload, u32) {
-        (self.pkt, self.payload, self.pkt_size)
-    }
+    pub(super) fn into_inner(self) -> (codec::Publish, Payload, u32) { panic!("STUB: not implemented") }
 }

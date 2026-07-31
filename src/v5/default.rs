@@ -11,14 +11,11 @@ use super::{
     Session, control::ProtocolMessage, control::ProtocolMessageAck, shared::MqttShared,
 };
 
-/// Default control service
 #[derive(Debug)]
 pub struct DefaultProtocolService<S, E>(PhantomData<(S, E)>);
 
 impl<S, E> Default for DefaultProtocolService<S, E> {
-    fn default() -> Self {
-        DefaultProtocolService(PhantomData)
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 impl<S, E> ServiceFactory<ProtocolMessage, S> for DefaultProtocolService<S, E> {
@@ -27,9 +24,7 @@ impl<S, E> ServiceFactory<ProtocolMessage, S> for DefaultProtocolService<S, E> {
     type InitError = E;
     type Service = DefaultProtocolService<S, E>;
 
-    async fn create(&self, _: S) -> Result<Self::Service, Self::InitError> {
-        Ok(DefaultProtocolService(PhantomData))
-    }
+    async fn create(&self, _: S) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
 impl<S, E> Service<ProtocolMessage> for DefaultProtocolService<S, E> {
@@ -40,34 +35,18 @@ impl<S, E> Service<ProtocolMessage> for DefaultProtocolService<S, E> {
         &self,
         pkt: ProtocolMessage,
         _: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        match pkt {
-            ProtocolMessage::Ping(pkt) => Ok(pkt.ack()),
-            ProtocolMessage::Disconnect(pkt) => Ok(pkt.ack()),
-            _ => {
-                log::warn!("MQTT5 Control service is not configured, pkt: {pkt:?}");
-                Ok(pkt.disconnect_with(super::codec::Disconnect::new(
-                    super::codec::DisconnectReasonCode::UnspecifiedError,
-                )))
-            }
-        }
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 }
 
 #[derive(Copy, Clone, Debug)]
-/// Service that can limit size of in-flight async requests.
-///
-/// Default is 64kb size
+
 pub struct InFlightService;
 
 impl<S, St> Middleware<S, (SharedCfg, Session<St>)> for InFlightService {
     type Service = InFlightServiceImpl<S>;
 
     #[inline]
-    fn create(&self, service: S, cfg: (SharedCfg, Session<St>)) -> Self::Service {
-        let cfg: Cfg<MqttServiceConfig> = cfg.0.get();
-        InFlightServiceImpl::new(0, cfg.max_receive_size, service)
-    }
+    fn create(&self, service: S, cfg: (SharedCfg, Session<St>)) -> Self::Service { panic!("STUB: not implemented") }
 }
 
 #[derive(Clone, Debug)]
@@ -87,18 +66,14 @@ impl<S, E> ControlService<S, E>
 where
     S: Service<Control<E>>,
 {
-    pub(super) fn new(svc: S, shared: Rc<MqttShared>) -> Self {
-        Self { svc, shared, _t: PhantomData }
-    }
+    pub(super) fn new(svc: S, shared: Rc<MqttShared>) -> Self { panic!("STUB: not implemented") }
 }
 
 impl<S, St, E> ControlFactory<S, St, E>
 where
     S: ServiceFactory<Control<E>, Session<St>>,
 {
-    pub(super) fn new(svc: S) -> Self {
-        Self { svc, _t: PhantomData }
-    }
+    pub(super) fn new(svc: S) -> Self { panic!("STUB: not implemented") }
 }
 
 impl<S, St, E> ServiceFactory<Control<E>, Session<St>> for ControlFactory<S, St, E>
@@ -110,13 +85,7 @@ where
     type InitError = MqttError<S::InitError>;
     type Service = ControlService<S::Service, E>;
 
-    async fn create(&self, cfg: Session<St>) -> Result<Self::Service, Self::InitError> {
-        Ok(ControlService {
-            shared: cfg.sink().shared(),
-            svc: self.svc.create(cfg).await.map_err(MqttError::Service)?,
-            _t: PhantomData,
-        })
-    }
+    async fn create(&self, cfg: Session<St>) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
 impl<S, E> Service<Control<E>> for ControlService<S, E>
@@ -130,60 +99,7 @@ where
         &self,
         req: Control<E>,
         ctx: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        let mut proto_error = false;
-        let disconnect = match &req {
-            Control::Stop(Reason::Error(_)) => {
-                self.shared.drop_payload(&PayloadError::Service);
-                Some(
-                    codec::Packet::from(codec::Disconnect::new(
-                        codec::DisconnectReasonCode::ImplementationSpecificError,
-                    ))
-                    .into(),
-                )
-            }
-            Control::Stop(Reason::Protocol(err)) => {
-                self.shared.drop_payload(err.get_ref());
-                proto_error = true;
-                Some(
-                    codec::Packet::from(codec::Disconnect::from_proto_error(err.get_ref()))
-                        .into(),
-                )
-            }
-            Control::Stop(Reason::PeerGone(_)) => {
-                self.shared.drop_payload(&PayloadError::Disconnected);
-                None
-            }
-            Control::WrBackpressure(status) => {
-                if status.enabled() {
-                    self.shared.enable_wr_backpressure();
-                } else {
-                    self.shared.disable_wr_backpressure();
-                }
-                None
-            }
-        };
-
-        match ctx.call(&self.svc, req).await {
-            Ok(Some(val)) => {
-                if (proto_error || !self.shared.is_disconnect_recv())
-                    && !self.shared.is_disconnect_sent()
-                {
-                    Ok(Some(val))
-                } else {
-                    Ok(None)
-                }
-            }
-            Ok(None) => {
-                if disconnect.is_some() && !self.shared.is_disconnect_sent() {
-                    Ok(disconnect)
-                } else {
-                    Ok(None)
-                }
-            }
-            Err(err) => Err(MqttError::Service(err)),
-        }
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 
     ntex_service::forward_ready!(svc, MqttError::Service);
     ntex_service::forward_poll!(svc, MqttError::Service);

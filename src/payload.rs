@@ -10,72 +10,31 @@ use crate::error::PayloadError;
 type PlStream = bstream::Receiver<PayloadError>;
 pub(crate) type PlSender = bstream::Sender<PayloadError>;
 
-/// Payload for Publish packet
 pub struct Payload {
     pl: Either<Cell<Option<Bytes>>, PlStream>,
 }
 
 impl Default for Payload {
-    fn default() -> Self {
-        Payload { pl: Either::Left(Cell::new(None)) }
-    }
+    fn default() -> Self { panic!("STUB: not implemented") }
 }
 
 impl Payload {
-    pub fn from_bytes(buf: Bytes) -> Payload {
-        Payload { pl: Either::Left(Cell::new(Some(buf))) }
-    }
+    pub fn from_bytes(buf: Bytes) -> Payload { panic!("STUB: not implemented") }
 
-    pub(crate) fn from_stream(buf: Bytes, buf_size: usize) -> (Payload, PlSender) {
-        let (tx, rx) = bstream::channel();
-        rx.max_buffer_size(buf_size);
-        if !buf.is_empty() {
-            tx.feed_data(buf);
-        }
-        (Payload { pl: Either::Right(rx) }, tx)
-    }
+    pub(crate) fn from_stream(buf: Bytes, buf_size: usize) -> (Payload, PlSender) { panic!("STUB: not implemented") }
 
-    /// Check if payload is fixed
-    pub fn is_fixed(&self) -> bool {
-        self.pl.is_left()
-    }
+    pub fn is_fixed(&self) -> bool { panic!("STUB: not implemented") }
 
-    /// Read next payload chunk
-    pub async fn read(&self) -> Result<Option<Bytes>, PayloadError> {
-        match &self.pl {
-            Either::Left(pl) => Ok(pl.take()),
-            Either::Right(pl) => pl.read().await.map_or(Ok(None), |res| res.map(Some)),
-        }
-    }
+    pub async fn read(&self) -> Result<Option<Bytes>, PayloadError> { panic!("STUB: not implemented") }
 
-    /// Read complete payload
-    pub async fn read_all(&self) -> Result<Bytes, PayloadError> {
-        match &self.pl {
-            Either::Left(pl) => pl.take().ok_or(PayloadError::Consumed),
-            Either::Right(pl) => {
-                let mut buf = BytesMut::from(pl.read().await.ok_or(PayloadError::Consumed)??);
-                while let Some(result) = pl.read().await {
-                    buf.extend_from_slice(&result?);
-                }
-                Ok(buf.freeze())
-            }
-        }
-    }
+    pub async fn read_all(&self) -> Result<Bytes, PayloadError> { panic!("STUB: not implemented") }
 
     #[must_use]
-    pub fn take(&mut self) -> Payload {
-        Payload { pl: mem::replace(&mut self.pl, Either::Left(Cell::new(None))) }
-    }
+    pub fn take(&mut self) -> Payload { panic!("STUB: not implemented") }
 }
 
 impl fmt::Debug for Payload {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.pl.is_left() {
-            f.debug_struct("FixedPayload").finish()
-        } else {
-            f.debug_struct("StreamingPayload").finish()
-        }
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]

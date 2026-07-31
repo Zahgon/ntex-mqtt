@@ -17,7 +17,6 @@ use super::publish::{Publish, PublishAck};
 use super::shared::{MqttShared, MqttSinkPool};
 use super::{MqttSink, Session, ToPublishAck, dispatcher::factory};
 
-/// Mqtt Server
 pub struct MqttServer<St, E, H, P, C, M = Identity> {
     control: C,
     handshake: H,
@@ -28,9 +27,7 @@ pub struct MqttServer<St, E, H, P, C, M = Identity> {
 }
 
 impl<St, E, H, P, C, M> fmt::Debug for MqttServer<St, E, H, P, C, M> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("v5::MqttServer").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<St, E, H>
@@ -49,20 +46,11 @@ impl<St, E, H>
 where
     H: ServiceFactory<Handshake, SharedCfg, Response = HandshakeAck<St>>,
 {
-    /// Create server factory and provide handshake service
+    
     pub fn new<F>(handshake: F) -> Self
     where
         F: IntoServiceFactory<H, Handshake, SharedCfg>,
-    {
-        MqttServer {
-            handshake: handshake.into_factory(),
-            protocol: DefaultProtocolService::default(),
-            middleware: InFlightService,
-            control: ControlFactory::new(control::DefaultControlService::default()),
-            pool: Rc::new(MqttSinkPool::default()),
-            _t: PhantomData,
-        }
-    }
+    { panic!("STUB: not implemented") }
 }
 
 impl<St, E, H, P, C, M> MqttServer<St, E, H, P, C, M>
@@ -78,40 +66,11 @@ where
             InitError = MqttError<H::Error>,
         > + 'static,
 {
-    /// Registers middleware, in the form of a middleware component (type),
-    /// that runs during inbound and/or outbound processing in the request
-    /// lifecycle (request -> response), modifying request/response as
-    /// necessary, across all requests managed by the *Server*.
-    ///
-    /// Use middleware when you need to read or modify *every* request or
-    /// response in some way.
-    pub fn middleware<U>(self, mw: U) -> MqttServer<St, E, H, P, C, Stack<M, U>> {
-        MqttServer {
-            middleware: Stack::new(self.middleware, mw),
-            handshake: self.handshake,
-            protocol: self.protocol,
-            control: self.control,
-            pool: self.pool,
-            _t: PhantomData,
-        }
-    }
+    
+    pub fn middleware<U>(self, mw: U) -> MqttServer<St, E, H, P, C, Stack<M, U>> { panic!("STUB: not implemented") }
 
-    /// Replace middlewares
-    pub fn replace_middlewares<U>(self, mw: U) -> MqttServer<St, E, H, P, C, U> {
-        MqttServer {
-            middleware: mw,
-            handshake: self.handshake,
-            protocol: self.protocol,
-            control: self.control,
-            pool: self.pool,
-            _t: PhantomData,
-        }
-    }
+    pub fn replace_middlewares<U>(self, mw: U) -> MqttServer<St, E, H, P, C, U> { panic!("STUB: not implemented") }
 
-    /// Service to handle protocol control messages
-    ///
-    /// All control packets are processed sequentially, max number of buffered
-    /// control packets is 16.
     pub fn protocol<F, Srv>(self, service: F) -> MqttServer<St, E, H, Srv, C, M>
     where
         F: IntoServiceFactory<Srv, ProtocolMessage, Session<St>>,
@@ -119,18 +78,8 @@ where
             + 'static,
         E: From<Srv::Error>,
         H::Error: From<Srv::InitError>,
-    {
-        MqttServer {
-            handshake: self.handshake,
-            protocol: service.into_factory(),
-            middleware: self.middleware,
-            control: self.control,
-            pool: self.pool,
-            _t: PhantomData,
-        }
-    }
+    { panic!("STUB: not implemented") }
 
-    /// Service to handle connection control messages
     pub fn control<F, Srv>(
         self,
         service: F,
@@ -165,9 +114,6 @@ where
         }
     }
 
-    /// Set service to handle publish packets
-    ///
-    /// And create mqtt server factory
     pub fn publish<F, Srv>(
         self,
         publish: F,
@@ -224,14 +170,7 @@ where
     type Service = HandshakeService<St, H::Service>;
     type InitError = H::InitError;
 
-    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> {
-        Ok(HandshakeService {
-            cfg: cfg.get(),
-            service: self.factory.create(cfg).await?,
-            pool: self.pool.clone(),
-            _t: PhantomData,
-        })
-    }
+    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
 struct HandshakeService<St, H> {
@@ -256,118 +195,7 @@ where
         &self,
         io: IoBoxed,
         ctx: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        log::trace!("Starting mqtt v5 handshake");
-
-        let codec = mqtt::Codec::default();
-        codec.set_max_inbound_size(self.cfg.max_size);
-        codec.set_min_chunk_size(self.cfg.min_chunk_size);
-
-        let shared = Rc::new(MqttShared::new(io.get_ref(), codec, self.pool.clone()));
-        shared.set_max_qos(self.cfg.max_qos);
-        shared.set_receive_max(self.cfg.max_receive);
-        shared.set_topic_alias_max(self.cfg.max_topic_alias);
-
-        // read first packet
-        let packet = timeout_checked(self.cfg.connect_timeout, io.recv(&shared.codec))
-            .await
-            .map_err(|()| MqttError::Handshake(HandshakeError::Timeout))?
-            .map_err(|err| {
-                log::trace!("{}: Error is received during mqtt handshake: {err:?}", io.tag());
-                MqttError::Handshake(HandshakeError::from(err))
-            })?
-            .ok_or_else(|| {
-                log::trace!("{}: Server mqtt is disconnected during handshake", io.tag());
-                MqttError::Handshake(HandshakeError::Disconnected(None))
-            })?;
-
-        match packet {
-            Decoded::Packet(Packet::Connect(connect), size) => {
-                // set max outbound (encoder) packet size
-                if let Some(size) = connect.max_packet_size {
-                    shared.codec.set_max_outbound_size(size.get());
-                }
-                let keep_alive = connect.keep_alive;
-                let peer_receive_max = connect.receive_max.map(NonZero::get);
-                if connect.session_expiry_interval_secs == 0 {
-                    shared.set_zero_session_expiry();
-                }
-
-                // authenticate mqtt connection
-                let mut ack = ctx
-                    .call(&self.service, Handshake::new(connect, size, io, shared))
-                    .await
-                    .map_err(|e| MqttError::Handshake(HandshakeError::Service(e)))?;
-
-                if let Some(session) = ack.session {
-                    log::trace!("Sending: {:#?}", ack.packet);
-                    let shared = ack.shared;
-
-                    shared.set_max_qos(ack.packet.max_qos);
-                    shared.set_receive_max(ack.packet.receive_max.get());
-                    shared.set_topic_alias_max(ack.packet.topic_alias_max);
-                    shared.codec.set_max_inbound_size(ack.packet.max_packet_size.unwrap_or(0));
-                    shared.codec.set_retain_available(ack.packet.retain_available);
-                    shared
-                        .codec
-                        .set_sub_ids_available(ack.packet.subscription_identifiers_available);
-                    if ack.packet.server_keepalive_sec.is_none() && (keep_alive > ack.keepalive)
-                    {
-                        ack.packet.server_keepalive_sec = Some(ack.keepalive);
-                    }
-
-                    // outbound receive max
-                    let max_send_cfg = ack.max_send.unwrap_or(self.cfg.max_send);
-                    let max_send = peer_receive_max
-                        .map_or(max_send_cfg, |val| cmp::min(max_send_cfg, val));
-                    shared.set_cap(max_send as usize);
-
-                    ack.io.encode(
-                        Encoded::Packet(Packet::ConnectAck(Box::new(ack.packet))),
-                        &shared.codec,
-                    )?;
-
-                    Ok((
-                        ack.io,
-                        shared.clone(),
-                        Session::new(session, MqttSink::new(shared)),
-                        Seconds(ack.keepalive),
-                    ))
-                } else {
-                    log::trace!("Failed to complete handshake: {:#?}", ack.packet);
-
-                    ack.io.encode(
-                        Encoded::Packet(Packet::ConnectAck(Box::new(ack.packet))),
-                        &ack.shared.codec,
-                    )?;
-                    let _ = ack.io.shutdown().await;
-                    Err(MqttError::Handshake(HandshakeError::Disconnected(None)))
-                }
-            }
-            Decoded::Packet(packet, _) => {
-                log::info!(
-                    "MQTT-3.1.0-1: Expected CONNECT packet, received {}",
-                    packet.packet_type()
-                );
-                Err(MqttError::Handshake(HandshakeError::Protocol(
-                    ProtocolError::unexpected_packet(
-                        packet.packet_type(),
-                        "Expected CONNECT packet [MQTT-3.1.0-1]",
-                    ),
-                )))
-            }
-            Decoded::Publish(..) => {
-                log::info!("MQTT-3.1.0-1: Expected CONNECT packet, received PUBLISH");
-                Err(MqttError::Handshake(HandshakeError::Protocol(
-                    ProtocolError::unexpected_packet(
-                        crate::types::packet_type::PUBLISH_START,
-                        "Expected CONNECT packet [MQTT-3.1.0-1]",
-                    ),
-                )))
-            }
-            Decoded::PayloadChunk(..) => unreachable!(),
-        }
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]

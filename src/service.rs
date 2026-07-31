@@ -20,21 +20,11 @@ pub struct MqttServer<St, E, H, T, M, C, Codec> {
 }
 
 impl<St, E, H, T, M, C, Codec> fmt::Debug for MqttServer<St, E, H, T, M, C, Codec> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MqttServer").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<St, E, H, T, M, C, Codec> MqttServer<St, E, H, T, M, C, Codec> {
-    pub(crate) fn new(handshake: H, service: T, mw: M, control: C) -> Self {
-        MqttServer {
-            handshake,
-            handler: Rc::new(service),
-            middleware: Rc::new(mw),
-            control: Rc::new(control),
-            _t: PhantomData,
-        }
-    }
+    pub(crate) fn new(handshake: H, service: T, mw: M, control: C) -> Self { panic!("STUB: not implemented") }
 }
 
 impl<St, E, H, T, M, C, Codec> MqttServer<St, E, H, T, M, C, Codec>
@@ -44,19 +34,7 @@ where
     async fn create_service(
         &self,
         cfg: SharedCfg,
-    ) -> Result<MqttHandler<St, E, H::Service, T, M, C, Codec>, H::InitError> {
-        let handshake = self.handshake.create(cfg.clone()).await?;
-
-        // create connect service and then create service impl
-        Ok(MqttHandler {
-            cfg,
-            handshake,
-            handler: self.handler.clone(),
-            middleware: self.middleware.clone(),
-            control: self.control.clone(),
-            _t: PhantomData,
-        })
-    }
+    ) -> Result<MqttHandler<St, E, H::Service, T, M, C, Codec>, H::InitError> { panic!("STUB: not implemented") }
 }
 
 impl<St, E, H, T, M, C, Codec> ServiceFactory<IoBoxed, SharedCfg>
@@ -89,9 +67,7 @@ where
     type InitError = H::InitError;
     type Service = MqttHandler<St, E, H::Service, T, M, C, Codec>;
 
-    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> {
-        self.create_service(cfg).await
-    }
+    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
 impl<F, St, E, H, T, M, C, Codec> ServiceFactory<Io<F>, SharedCfg>
@@ -125,9 +101,7 @@ where
     type InitError = H::InitError;
     type Service = MqttHandler<St, E, H::Service, T, M, C, Codec>;
 
-    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> {
-        self.create_service(cfg).await
-    }
+    async fn create(&self, cfg: SharedCfg) -> Result<Self::Service, Self::InitError> { panic!("STUB: not implemented") }
 }
 
 pub struct MqttHandler<St, E, H, T, M, C, Codec> {
@@ -140,9 +114,7 @@ pub struct MqttHandler<St, E, H, T, M, C, Codec> {
 }
 
 impl<St, E, H, T, M, C, Codec> fmt::Debug for MqttHandler<St, E, H, T, M, C, Codec> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MqttHandler").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<St, E, H, T, M, C, Codec> Service<IoBoxed> for MqttHandler<St, E, H, T, M, C, Codec>
@@ -176,26 +148,7 @@ where
     ntex_service::forward_poll!(handshake);
     ntex_service::forward_shutdown!(handshake);
 
-    async fn call(&self, req: IoBoxed, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> {
-        let tag = req.tag();
-        let handshake = ctx.call(&self.handshake, req).await;
-
-        let (io, codec, session, keepalive) = handshake?;
-        log::trace!("{tag}: Connection handshake succeeded");
-
-        let control = self.control.create(session.clone()).await?;
-        let handler = self.handler.create((self.cfg.clone(), session.clone())).await?;
-        log::trace!("{tag}: Connection handler is created, starting dispatcher");
-
-        Dispatcher::new(
-            io,
-            codec,
-            self.middleware.create(handler, (self.cfg.clone(), session)),
-            control,
-        )
-        .keepalive_timeout(keepalive)
-        .await
-    }
+    async fn call(&self, req: IoBoxed, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 }
 
 impl<F, St, E, H, T, M, C, Codec> Service<Io<F>> for MqttHandler<St, E, H, T, M, C, Codec>
@@ -231,7 +184,5 @@ where
     ntex_service::forward_shutdown!(handshake);
 
     #[inline]
-    async fn call(&self, io: Io<F>, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> {
-        Service::<IoBoxed>::call(self, IoBoxed::from(io), ctx).await
-    }
+    async fn call(&self, io: Io<F>, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 }

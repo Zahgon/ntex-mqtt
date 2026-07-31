@@ -13,7 +13,6 @@ use crate::{payload::Payload, payload::PayloadStatus, payload::PlSender};
 
 use super::control::{ProtocolMessage, ProtocolMessageAck};
 
-/// mqtt3 protocol dispatcher
 pub(super) fn create_dispatcher<T, C, E>(
     sink: Rc<MqttShared>,
     inflight: usize,
@@ -26,7 +25,7 @@ where
     T: Service<Publish, Response = Either<(), Publish>, Error = E> + 'static,
     C: Service<ProtocolMessage, Response = ProtocolMessageAck, Error = E> + 'static,
 {
-    // limit number of in-flight messages
+    
     InFlightService::new(
         inflight,
         Dispatcher::new(
@@ -38,7 +37,6 @@ where
     )
 }
 
-/// Mqtt protocol dispatcher
 pub(crate) struct Dispatcher<T, C, E> {
     publish: T,
     inner: Rc<Inner<C>>,
@@ -63,19 +61,7 @@ where
         publish: T,
         control: C,
         max_buffer_size: usize,
-    ) -> Self {
-        Self {
-            publish,
-            max_buffer_size,
-            inner: Rc::new(Inner {
-                sink,
-                payload: Cell::new(None),
-                control: Pipeline::new(control),
-                inflight: RefCell::new(HashSet::default()),
-            }),
-            _t: PhantomData,
-        }
-    }
+    ) -> Self { panic!("STUB: not implemented") }
 }
 
 impl<C> Inner<C> {
@@ -83,11 +69,7 @@ impl<C> Inner<C> {
     where
         PErr: Clone,
         PayloadError: From<PErr>,
-    {
-        if let Some(pl) = self.payload.take() {
-            pl.set_error(err.clone().into());
-        }
-    }
+    { panic!("STUB: not implemented") }
 }
 
 impl<T, C, E> Service<Decoded> for Dispatcher<T, C, E>
@@ -101,143 +83,18 @@ where
     type Error = DispatcherError<E>;
 
     #[inline]
-    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> {
-        let (res1, res2) = join(ctx.ready(&self.publish), self.inner.control.ready()).await;
-        if (res1.is_err() || res2.is_err())
-            && let Some(pl) = self.inner.payload.take()
-        {
-            self.inner.payload.set(Some(pl.clone()));
-            if pl.ready().await != PayloadStatus::Ready {
-                self.inner.sink.force_close();
-            }
-        }
+    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
-        res1.map_err(DispatcherError::Service)?;
-        res2?;
-        Ok(())
-    }
+    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
-    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> {
-        self.publish.poll(cx).map_err(DispatcherError::Service)?;
-        self.inner.control.poll(cx)
-    }
-
-    async fn shutdown(&self) {
-        self.inner.drop_payload(&PayloadError::Disconnected);
-        self.inner.sink.close();
-        self.publish.shutdown().await;
-        self.inner.control.shutdown().await;
-    }
+    async fn shutdown(&self) { panic!("STUB: not implemented") }
 
     #[allow(clippy::too_many_lines)]
     async fn call(
         &self,
         packet: Decoded,
         ctx: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        log::trace!("Dispatch packet: {packet:#?}");
-
-        match packet {
-            Decoded::Publish(publish, payload, size) => {
-                let inner = self.inner.as_ref();
-                let packet_id = publish.packet_id;
-
-                // check for duplicated packet id
-                if let Some(pid) = packet_id
-                    && !inner.inflight.borrow_mut().insert(pid)
-                {
-                    log::trace!("Duplicated packet id for publish packet: {pid:?}");
-                    return Err(SpecViolation::PacketId_2_2_1_3_Pub.into());
-                }
-
-                let payload = if publish.payload_size == payload.len() as u32 {
-                    Payload::from_bytes(payload)
-                } else {
-                    let (pl, sender) = Payload::from_stream(payload, self.max_buffer_size);
-                    self.inner.payload.set(Some(sender));
-                    pl
-                };
-
-                publish_fn(
-                    &self.publish,
-                    Publish::new(publish, payload, size),
-                    packet_id,
-                    inner,
-                    ctx,
-                )
-                .await
-            }
-            Decoded::PayloadChunk(buf, eof) => {
-                let pl = self.inner.payload.take().unwrap();
-                pl.feed_data(buf);
-                if eof {
-                    pl.feed_eof();
-                } else {
-                    self.inner.payload.set(Some(pl));
-                }
-                Ok(None)
-            }
-            Decoded::Packet(Packet::PublishAck { packet_id }, _) => {
-                if let Err(e) = self.inner.sink.pkt_ack(Ack::Publish(packet_id)) {
-                    Err(e.into())
-                } else {
-                    Ok(None)
-                }
-            }
-            Decoded::Packet(Packet::PublishReceived { packet_id }, _) => {
-                if let Err(e) = self.inner.sink.pkt_ack(Ack::Receive(packet_id)) {
-                    Err(e.into())
-                } else {
-                    Ok(None)
-                }
-            }
-            Decoded::Packet(Packet::PublishComplete { packet_id }, _) => {
-                if let Err(e) = self.inner.sink.pkt_ack(Ack::Complete(packet_id)) {
-                    Err(e.into())
-                } else {
-                    Ok(None)
-                }
-            }
-            Decoded::Packet(Packet::PublishRelease { packet_id }, _) => {
-                if self.inner.inflight.borrow().contains(&packet_id) {
-                    self.inner.control(ProtocolMessage::pubrel(packet_id)).await
-                } else {
-                    log::warn!("Unknown packet-id in PublishRelease packet");
-                    self.inner.sink.close();
-                    Ok(None)
-                }
-            }
-            Decoded::Packet(Packet::SubscribeAck { packet_id, status }, _) => {
-                if let Err(e) = self.inner.sink.pkt_ack(Ack::Subscribe { packet_id, status }) {
-                    Err(e.into())
-                } else {
-                    Ok(None)
-                }
-            }
-            Decoded::Packet(Packet::UnsubscribeAck { packet_id }, _) => {
-                if let Err(e) = self.inner.sink.pkt_ack(Ack::Unsubscribe(packet_id)) {
-                    Err(e.into())
-                } else {
-                    Ok(None)
-                }
-            }
-            Decoded::Packet(
-                pkt @ (Packet::PingRequest
-                | Packet::Disconnect
-                | Packet::Subscribe { .. }
-                | Packet::Unsubscribe { .. }),
-                _,
-            ) => Err(ProtocolError::unexpected_packet(
-                pkt.packet_type(),
-                "Packet of the type is not expected from server",
-            )
-            .into()),
-            Decoded::Packet(pkt, _) => {
-                log::debug!("Unsupported packet: {pkt:?}");
-                Ok(None)
-            }
-        }
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 }
 
 async fn publish_fn<'f, T, C, E>(
@@ -250,25 +107,7 @@ async fn publish_fn<'f, T, C, E>(
 where
     T: Service<Publish, Response = Either<(), Publish>, Error = E>,
     C: Service<ProtocolMessage, Response = ProtocolMessageAck, Error = DispatcherError<E>>,
-{
-    let res = ctx.call(svc, pkt).await.map_err(DispatcherError::Service)?;
-    match res {
-        Either::Left(()) => {
-            log::trace!("Publish result for packet {packet_id:?} is ready");
-
-            if let Some(packet_id) = packet_id {
-                inner.inflight.borrow_mut().remove(&packet_id);
-                Ok(Some(Encoded::Packet(Packet::PublishAck { packet_id })))
-            } else {
-                Ok(None)
-            }
-        }
-        Either::Right(pkt) => {
-            let (pkt, payload, size) = pkt.into_inner();
-            inner.control(ProtocolMessage::publish(pkt, payload, size)).await
-        }
-    }
-}
+{ panic!("STUB: not implemented") }
 
 impl<C> Inner<C> {
     async fn control<E>(
@@ -277,39 +116,7 @@ impl<C> Inner<C> {
     ) -> Result<Option<Encoded>, DispatcherError<E>>
     where
         C: Service<ProtocolMessage, Response = ProtocolMessageAck, Error = DispatcherError<E>>,
-    {
-        let packet = match self
-            .control
-            .call(msg)
-            .await
-            .inspect_err(|_| {
-                self.drop_payload(&PayloadError::Service);
-                self.sink.close();
-            })?
-            .result
-        {
-            ProtocolMessageKind::Ping => Some(Encoded::Packet(codec::Packet::PingResponse)),
-            ProtocolMessageKind::PublishAck(id) => {
-                self.inflight.borrow_mut().remove(&id);
-                Some(Encoded::Packet(codec::Packet::PublishAck { packet_id: id }))
-            }
-            ProtocolMessageKind::PublishRelease(id) => {
-                self.inflight.borrow_mut().remove(&id);
-                Some(Encoded::Packet(Packet::PublishComplete { packet_id: id }))
-            }
-            ProtocolMessageKind::Subscribe(_) | ProtocolMessageKind::Unsubscribe(_) => {
-                unreachable!()
-            }
-            ProtocolMessageKind::Disconnect => {
-                self.drop_payload(&PayloadError::Service);
-                self.sink.close();
-                None
-            }
-            ProtocolMessageKind::Nothing => None,
-        };
-
-        Ok(packet)
-    }
+    { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]

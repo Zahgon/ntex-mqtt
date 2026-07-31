@@ -11,8 +11,6 @@ use super::{Session, publish::Publish, publish::PublishAck};
 type Handler<S, E> = BoxServiceFactory<Session<S>, Publish, PublishAck, E, E>;
 type HandlerService<E> = BoxService<Publish, PublishAck, E>;
 
-/// Router - structure that follows the builder pattern
-/// for building publish packet router instances for mqtt server.
 pub struct Router<S, Err> {
     router: RouterBuilder<usize>,
     handlers: Vec<Handler<S, Err>>,
@@ -20,9 +18,7 @@ pub struct Router<S, Err> {
 }
 
 impl<S, Err> fmt::Debug for Router<S, Err> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("v5::Router").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<S, Err> Router<S, Err>
@@ -30,9 +26,7 @@ where
     S: 'static,
     Err: 'static,
 {
-    /// Create mqtt application router.
-    ///
-    /// Default service to be used if no matching resource could be found.
+    
     pub fn new<F, U>(default_service: F) -> Self
     where
         F: IntoServiceFactory<U, Publish, Session<S>>,
@@ -43,42 +37,22 @@ where
                 Error = Err,
                 InitError = Err,
             > + 'static,
-    {
-        Router {
-            router: ntex_router::Router::build(),
-            handlers: Vec::new(),
-            default: boxed::factory(default_service.into_factory()),
-        }
-    }
+    { panic!("STUB: not implemented") }
 
     #[must_use]
-    /// Configure mqtt resource for a specific topic.
+    
     pub fn resource<T, F, U>(mut self, address: T, service: F) -> Self
     where
         T: IntoPattern,
         F: IntoServiceFactory<U, Publish, Session<S>>,
         U: ServiceFactory<Publish, Session<S>, Response = PublishAck, Error = Err> + 'static,
         Err: From<U::InitError>,
-    {
-        self.router.path(address, self.handlers.len());
-        self.handlers.push(boxed::factory(service.into_factory().map_init_err(Err::from)));
-        self
-    }
+    { panic!("STUB: not implemented") }
 
-    /// Finish router configuration and create router service factory
-    pub fn build(self) -> RouterFactory<S, Err> {
-        RouterFactory {
-            router: self.router.finish(),
-            handlers: Rc::new(self.handlers),
-            default: self.default,
-        }
-    }
+    pub fn build(self) -> RouterFactory<S, Err> { panic!("STUB: not implemented") }
 
-    #[doc(hidden)]
     #[deprecated]
-    pub fn finish(self) -> RouterFactory<S, Err> {
-        self.build()
-    }
+    pub fn finish(self) -> RouterFactory<S, Err> { panic!("STUB: not implemented") }
 }
 
 impl<S, Err> IntoServiceFactory<RouterFactory<S, Err>, Publish, Session<S>> for Router<S, Err>
@@ -86,9 +60,7 @@ where
     S: 'static,
     Err: 'static,
 {
-    fn into_factory(self) -> RouterFactory<S, Err> {
-        self.build()
-    }
+    fn into_factory(self) -> RouterFactory<S, Err> { panic!("STUB: not implemented") }
 }
 
 pub struct RouterFactory<S, Err> {
@@ -98,9 +70,7 @@ pub struct RouterFactory<S, Err> {
 }
 
 impl<S, Err> fmt::Debug for RouterFactory<S, Err> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("v5::RouterFactory").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<S, Err> ServiceFactory<Publish, Session<S>> for RouterFactory<S, Err>
@@ -113,21 +83,7 @@ where
     type InitError = Err;
     type Service = RouterService<Err>;
 
-    async fn create(&self, session: Session<S>) -> Result<Self::Service, Err> {
-        let default = self.default.create(session.clone()).await?;
-
-        let mut handlers = Vec::with_capacity(self.handlers.len());
-        for f in self.handlers.as_ref() {
-            handlers.push(f.create(session.clone()).await?);
-        }
-
-        Ok(RouterService {
-            default,
-            handlers,
-            router: self.router.clone(),
-            aliases: RefCell::new(HashMap::default()),
-        })
-    }
+    async fn create(&self, session: Session<S>) -> Result<Self::Service, Err> { panic!("STUB: not implemented") }
 }
 
 pub struct RouterService<Err> {
@@ -138,9 +94,7 @@ pub struct RouterService<Err> {
 }
 
 impl<Err> fmt::Debug for RouterService<Err> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("v5::RouterService").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<Err: 'static> Service<Publish> for RouterService<Err> {
@@ -148,49 +102,17 @@ impl<Err: 'static> Service<Publish> for RouterService<Err> {
     type Error = Err;
 
     #[inline]
-    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> {
-        for hnd in &self.handlers {
-            ctx.ready(hnd).await?;
-        }
-        ctx.ready(&self.default).await
-    }
+    async fn ready(&self, ctx: ServiceCtx<'_, Self>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
     #[inline]
-    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> {
-        for hnd in &self.handlers {
-            hnd.poll(cx)?;
-        }
-        self.default.poll(cx)
-    }
+    fn poll(&self, cx: &mut Context<'_>) -> Result<(), Self::Error> { panic!("STUB: not implemented") }
 
     #[allow(clippy::await_holding_refcell_ref)]
     async fn call(
         &self,
         mut req: Publish,
         ctx: ServiceCtx<'_, Self>,
-    ) -> Result<Self::Response, Self::Error> {
-        if !req.publish_topic().is_empty() {
-            if let Some((idx, _info)) = self.router.recognize(req.topic_mut()) {
-                // save info for topic alias
-                if let Some(alias) = req.packet().properties.topic_alias {
-                    self.aliases.borrow_mut().insert(alias, (*idx, req.topic().clone()));
-                }
-                return ctx.call(&self.handlers[*idx], req).await;
-            }
-        }
-        // handle publish with topic alias
-        else if let Some(ref alias) = req.packet().properties.topic_alias {
-            let aliases = self.aliases.borrow();
-            if let Some(item) = aliases.get(alias) {
-                let idx = item.0;
-                *req.topic_mut() = item.1.clone();
-                drop(aliases);
-                return ctx.call(&self.handlers[idx], req).await;
-            }
-            log::error!("Unknown topic alias: {alias:?}");
-        }
-        ctx.call(&self.default, req).await
-    }
+    ) -> Result<Self::Response, Self::Error> { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]

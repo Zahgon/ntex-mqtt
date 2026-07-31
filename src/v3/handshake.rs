@@ -7,7 +7,6 @@ use super::{codec as mqtt, shared::MqttShared, sink::MqttSink};
 
 const DEFAULT_KEEPALIVE: Seconds = Seconds(30);
 
-/// Connect message
 pub struct Handshake {
     io: IoBoxed,
     pkt: Box<mqtt::Connect>,
@@ -21,99 +20,41 @@ impl Handshake {
         pkt_size: u32,
         io: IoBoxed,
         shared: Rc<MqttShared>,
-    ) -> Self {
-        Self { io, pkt, pkt_size, shared }
-    }
+    ) -> Self { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet(&self) -> &mqtt::Connect {
-        &self.pkt
-    }
+    pub fn packet(&self) -> &mqtt::Connect { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet_mut(&mut self) -> &mut mqtt::Connect {
-        &mut self.pkt
-    }
+    pub fn packet_mut(&mut self) -> &mut mqtt::Connect { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn packet_size(&self) -> u32 {
-        self.pkt_size
-    }
+    pub fn packet_size(&self) -> u32 { panic!("STUB: not implemented") }
 
     #[inline]
-    pub fn io(&self) -> &IoBoxed {
-        &self.io
-    }
+    pub fn io(&self) -> &IoBoxed { panic!("STUB: not implemented") }
 
-    /// Returns mqtt server sink
-    pub fn sink(&self) -> MqttSink {
-        MqttSink::new(self.shared.clone())
-    }
+    pub fn sink(&self) -> MqttSink { panic!("STUB: not implemented") }
 
-    /// Ack handshake message and set state
-    pub fn ack<St>(self, st: St, session_present: bool) -> HandshakeAck<St> {
-        let Handshake { io, shared, pkt, .. } = self;
-        // [MQTT-3.1.2-24].
-        let keepalive = if pkt.keep_alive != 0 {
-            Seconds((pkt.keep_alive >> 1).saturating_add(pkt.keep_alive))
-        } else {
-            DEFAULT_KEEPALIVE
-        };
-        HandshakeAck {
-            io,
-            shared,
-            keepalive,
-            session_present,
-            session: Some(st),
-            max_send: None,
-            max_packet_size: None,
-            return_code: mqtt::ConnectAckReason::ConnectionAccepted,
-        }
-    }
+    pub fn ack<St>(self, st: St, session_present: bool) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 
-    /// Create connect ack object with `identifier rejected` return code
-    pub fn identifier_rejected<St>(self) -> HandshakeAck<St> {
-        self.failed(mqtt::ConnectAckReason::IdentifierRejected)
-    }
+    pub fn identifier_rejected<St>(self) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 
-    /// Create connect ack object with `bad user name or password` return code
-    pub fn bad_username_or_pwd<St>(self) -> HandshakeAck<St> {
-        self.failed(mqtt::ConnectAckReason::BadUserNameOrPassword)
-    }
+    pub fn bad_username_or_pwd<St>(self) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 
-    /// Create connect ack object with `not authorized` return code
-    pub fn not_authorized<St>(self) -> HandshakeAck<St> {
-        self.failed(mqtt::ConnectAckReason::NotAuthorized)
-    }
+    pub fn not_authorized<St>(self) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 
-    /// Create connect ack object with `service unavailable` return code
-    pub fn service_unavailable<St>(self) -> HandshakeAck<St> {
-        self.failed(mqtt::ConnectAckReason::ServiceUnavailable)
-    }
+    pub fn service_unavailable<St>(self) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 
     #[inline]
-    /// Create handshake ack object with error
-    pub fn failed<St>(self, return_code: mqtt::ConnectAckReason) -> HandshakeAck<St> {
-        HandshakeAck {
-            return_code,
-            io: self.io,
-            shared: self.shared,
-            session: None,
-            session_present: false,
-            max_send: None,
-            max_packet_size: None,
-            keepalive: DEFAULT_KEEPALIVE,
-        }
-    }
+    
+    pub fn failed<St>(self, return_code: mqtt::ConnectAckReason) -> HandshakeAck<St> { panic!("STUB: not implemented") }
 }
 
 impl fmt::Debug for Handshake {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.pkt.fmt(f)
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
-/// Ack connect message
 pub struct HandshakeAck<St> {
     pub(crate) io: IoBoxed,
     pub(crate) session: Option<St>,
@@ -126,46 +67,21 @@ pub struct HandshakeAck<St> {
 }
 
 impl<St> fmt::Debug for HandshakeAck<St> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HandshakeAck")
-            .field("session_present", &self.session_present)
-            .field("return_code", &self.return_code)
-            .field("keepalive", &self.keepalive)
-            .field("max_send", &self.max_send)
-            .field("max_packet_size", &self.max_packet_size)
-            .finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { panic!("STUB: not implemented") }
 }
 
 impl<St> HandshakeAck<St> {
     #[must_use]
-    /// Set idle time-out for the connection in seconds.
-    ///
-    /// By default idle time-out is set to 30 seconds.
-    pub fn idle_timeout(mut self, timeout: Seconds) -> Self {
-        self.keepalive = timeout;
-        self
-    }
+    
+    pub fn idle_timeout(mut self, timeout: Seconds) -> Self { panic!("STUB: not implemented") }
 
     #[must_use]
-    /// Number of outgoing concurrent messages.
-    ///
-    /// By default outgoing is set to 16 messages
-    pub fn max_send(mut self, val: Option<u16>) -> Self {
-        if val == Some(0) {
-            self.max_send = None;
-        } else {
-            self.max_send = val;
-        }
-        self
-    }
+    
+    pub fn max_send(mut self, val: Option<u16>) -> Self { panic!("STUB: not implemented") }
 
     #[must_use]
-    /// Maximum supported size for incoming packets.
-    pub fn max_packet_size(mut self, val: NonZeroU32) -> Self {
-        self.max_packet_size = Some(val);
-        self
-    }
+    
+    pub fn max_packet_size(mut self, val: NonZeroU32) -> Self { panic!("STUB: not implemented") }
 }
 
 #[cfg(test)]
@@ -186,11 +102,9 @@ mod tests {
         let connect = Box::new(mqtt::Connect::default());
         let h = Handshake::new(connect, 0, IoBoxed::from(io), shared);
 
-        // Handshake delegates to the Connect packet
         let dbg = format!("{h:?}");
         assert!(!dbg.is_empty());
 
-        // HandshakeAck
         let ack = h.ack(42u32, false);
         let dbg = format!("{ack:?}");
         assert!(dbg.contains("HandshakeAck"));
